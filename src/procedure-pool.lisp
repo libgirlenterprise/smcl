@@ -9,8 +9,12 @@
 
 (defparameter *arg-size* 2)
 
-(defstruct (procedure)
+(defstruct procedure
   (params :type list)
   (args :type list (make-list *arg-size* :initial-element '0))
-  (body :type list))
+  (body :type list)) ; should handle null case or any atom in list is not a symbol
+
+
+
+
 	   

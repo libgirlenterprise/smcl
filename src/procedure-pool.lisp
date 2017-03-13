@@ -36,7 +36,7 @@
     (unless operator-primitive-p
       (let ((sub-procedure (gethash body-operator
 				    (slot-vaue procedure-pool 'procedures))))
-	(reduce-f sub-procedure-body sub-procedure-params procedure-pool)))
+	(reduce-f sub-procedure-body sub-procedure procedure-pool)))
 
     ;; reduce arguments of this body
     (unless (or (atom body)
@@ -76,5 +76,5 @@
 			    
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
   (let ((procedure (gethash symbol
-			    (slot-vaue procedure-pool procedures))))
+			    (slot-vaue procedure-pool 'procedures))))
     (reduce-f procedure-body procedure procedure-pool)))

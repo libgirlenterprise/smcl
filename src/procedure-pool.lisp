@@ -25,14 +25,10 @@
 (defgeneric invoke-f (symbol args procedure-pool)) ; should handle when symbol is not a symbol
 
 (defmethod reduce-f (body procedure (procedure-pool procedure-pool))
-  (let* ((old-body-atom-p (atom body))
-	 (old-body (if old-body-atom-p
-		       body
-		       (copy-list body)))
-	 (body-operator (if old-body-atom-p
-			    old-body ; now the same as body unless recursion
-			    (if (atom (first old-body))
-				(first old-body)
+  (let* ((body-operator (if (atom body)
+			    body ; now the same as body unless recursion
+			    (if (atom (first body))
+				(first body)
 				'quote))) ; even if the first element of the body is not an atom, it should be perfect reduced
 	 (operator-primitive-p (primitivep body-operator)))
 
@@ -60,20 +56,25 @@
 				       procedure-pool)))))
 
     ;; invoke sub-procedure
-    (apply (if operator-primitive-p
-	       #'apply-primitive-f
-	       #'invoke-f)
-	   (append (list body-operator)
-		   (append (if old-body-atom-p
-			       nil
-			       (subseq body 1))
-			   procedure-args)
-		   (if operator-primitive-p
-		       procedure-args)
-		   (list procedure-pool)))))
+    ;; WARNING: doesn't clear about the case being rewriten
+    (let* ((old-body (copy-list body)) 
+	   (new-body (apply (if operator-primitive-p
+			       #'apply-primitive-f
+			       #'invoke-f)
+			   (append (list body-operator)
+				   (append (if (atom body)
+					       nil
+					       (subseq body 1))
+					   procedure-args)
+				   (if operator-primitive-p
+				       procedure-args)
+				   (list procedure-pool)))))
+      (if (equalp old-body new-body)
+	  new-body
+	  (reduce-f new-body procedure procedure-pool)))))
+	  
 			    
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
   (let ((procedure (gethash symbol
 			    (slot-vaue procedure-pool procedures))))
-    (reduce-f procedure-body procedure procedure-pool)
-    
+    (reduce-f procedure-body procedure procedure-pool)))

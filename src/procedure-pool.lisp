@@ -30,10 +30,20 @@
 		 (let* ((sub-body (nth i body-list))
 			(sub-body (if (atom sub-body)
 				      (list sub-body)
-				      sub-body)))
-		   (apply #'invoke-f
-			  (list (first sub-body)
-				(append (subseq sub-body 1)
-					(procedure-args))
-				procedure-pool))))))
+				      sub-body))
+			(symbol-primitive-p (primitivep (first sub-body))))
+		   (apply (if symbol-primitive-p
+			      #'apply-primitive-f
+			      #'invoke-f)
+			  (let ((args-for-apply (list procedure-pool)))
+			    (if symbol-primitive-p
+				(push procedure-args args-for-apply))
+			    (append (list (first sub-body)
+					  (append (subseq sub-body 1)
+						  procedure-args))
+				    args-for-apply)))))))
+			    
+
+		       
+  
 					 

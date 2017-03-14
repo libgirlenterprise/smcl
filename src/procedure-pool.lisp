@@ -1,5 +1,5 @@
-;;; TODO:
-;;; 1. exception handling
+;;;; TODO:
+;;;; 1. exception handling
 
 (:in-package :cl-user)
 (defpackage com.libgirl.smcl
@@ -65,9 +65,9 @@
 				   (append (if (atom body)
 					       nil
 					       (subseq body 1))
-					   procedure-args)
+					   (copy-list procedure-args)) ; WARNING: we might make it too long
 				   (if operator-primitive-p
-				       procedure-args)
+				       (copy-list procedure-args))
 				   (list procedure-pool)))))
       (if (equalp old-body new-body)
 	  new-body
@@ -75,6 +75,24 @@
 	  
 			    
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
-  (let ((procedure (gethash symbol
-			    (slot-vaue procedure-pool procedures))))
-    (reduce-f procedure-body procedure procedure-pool)))
+  (let* ((procedure (gethash symbol
+			     (slot-vaue procedure-pool 'procedures)))
+	 (new-body (if (listp procedure-body)
+		       (copy-list procedure-body)
+		       (list procedure-body))))
+    (labels ((replace-params-by-args (params args body-list)
+	       (loop for sub-body in body-list
+		     collect (or (reduce #'or
+					 (mapcar #'(lambda (param item arg)
+						     (if (eq param item)
+							 (if (atom arg)
+							     arg
+							     (copy-list arg))
+							 nil))
+						 (subseq params 0 *param-size*)
+						 (make-list *param-size* sub-body)
+						 (subseq args 0 *param-size*)))
+				 (if (atom sub-body)
+				     sub-body
+				     (replace-params-by-args params args sub-body))))))
+      (replace-params-by-args procedure-params args new-body))))

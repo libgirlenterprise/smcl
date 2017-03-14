@@ -65,13 +65,12 @@
 				#'apply-primitive-f
 				#'invoke-f)
 			    (append (list body-operator)
-				    (list (append (if (atom body)
-						      nil
-						      (subseq body 1))
+				    (list (append (unless (atom body)						      
+						    (subseq body 1))
 						  (copy-list procedure-args))) ; WARNING: we might make it too long
-				    (if (primitivep body-operator)
-					(list (copy-list procedure-args)
-					      procedure))
+				    (when (primitivep body-operator)
+				      (list (copy-list procedure-args)
+					    procedure))
 				    (list procedure-pool)))))
       (if (equalp old-body new-body)
 	  new-body
@@ -87,15 +86,14 @@
 	       (loop for sub-body in body-list
 		     collect (or (reduce #'or
 					 (mapcar #'(lambda (param item arg)
-						     (if (eq param item)
-							 (if (atom arg)
-							     arg
-							     (copy-list arg))
-							 nil))
+						     (when (eq param item)
+						       (if (atom arg)
+							   arg
+							   (copy-list arg))))							 
 						 (subseq params 0 *param-size*)
-						 (make-list *param-size* sub-body)
-						 (subseq args 0 *param-size*)))
-				 (if (atom sub-body)
-				     sub-body
-				     (replace-params-by-args params args sub-body))))))
+						 (make-list *param-size* :initial-element sub-body)
+						 (subseq args 0 *param-size*))))
+			     (if (atom sub-body)
+				 sub-body
+				 (replace-params-by-args params args sub-body)))))
       (replace-params-by-args procedure-params args new-body))))

@@ -20,18 +20,26 @@
 	(lambda (param-x param-y default-arg-1 default-arg-2) 
 	  (list 'quote (if (listp param-x)
 			   (cddr param-x) ;(cdr (cdr (LIST-QUOTE 11 22))) -> 22
-			   nil))))
+			   'nil))))
   (setf (gethash 'when primitives)
 	(lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
 	  (list 'list-quote (if (reduce-f param-x procedure procedure-pool) ;Is 'list-quote necessary here?
 			   (reduce-f param-y procedure procedure-pool)))))
   (setf (gethash 'eq primitives)
 	(lambda (param-x param-y default-arg-1 default-arg-2)
-	  (equal param-x param-y)))
+	  (if (equal param-x param-y)
+	      't
+	      'nil)))
   (setf (gethash 'atom primitives)
 	(lambda (param-x param-y default-arg-1 default-arg-2)
-	  (not (listp param-x))))
+	  (if (not (listp param-x))
+	      't
+	      'nil)))
+  (setf (gethash 't primitives) 't)
+  (setf (gethash 'nil primitives) 'nil)
+  
   )
+
 
 (defun primitivep (procedure-name)
   (if (gethash procedure primitives)
@@ -58,6 +66,6 @@
 ((lambda (param-x param-y default-arg-1 default-arg-2) 
    (list 'quote (if (listp param-x)
 		    (caddr param-x) ;(car (cdr (cdr (LIST-QUOTE 11 22)))) -> 22
-		    nil)))
+		    'nil)))
  (list 'LIST-QUOTE 11 22) 33 44 55)  
 

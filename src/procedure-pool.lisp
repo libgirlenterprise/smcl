@@ -24,13 +24,15 @@
 (defgeneric reduce-f (body procedure procedure-pool))
 
 (defgeneric invoke-f (symbol args procedure-pool)) ; should handle when symbol is not a symbol
+      
 
 (defmethod reduce-f (body procedure (procedure-pool procedure-pool))
+  "Set the object to which the body bound to its best reduced form (perfect form). Return the body object, but returning nil for no further reduction."
   (let* ((body-operator (if (atom body)
 			    body ; now the same as body unless recursion
 			    (if (atom (first body))
 				(first body)
-				'quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
+				'list-quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
     
     ;; reduce sub-procedure before invoke
     (unless (primitivep body-operator)
@@ -44,14 +46,13 @@
 		(special-primitive-p body-operator))
       (let ((perfect-form))
 	(do* ((i 1 (incf i)))
-	     ((or (atom body) ; for the case being rewriten
-		  (if (>= (- i 1) (length body)) ; for the same case of the last line
-		      t
-		      (progn
-			(setf (nth (- i 1) body)
-			      perfect-form)
-			nil))
-		  (>= i (length body))))
+	     ((or (atom body) ; for the case body being rewriten
+		  (>= (- i 1) (length body)) ; for the same case of the last line
+		  (progn
+		    (when perfect-form
+		      (setf (nth (- i 1) body)
+			    perfect-form))
+		    (>= i (length body)))))	  
 	  (setf perfect-form (reduce-f (nth i body)
 				       procedure
 				       procedure-pool)))))
@@ -59,10 +60,7 @@
     ;; invoke sub-procedure
     ;; and reduce body again until perfect form
     ;; WARNING: doesn't clear about the case being rewriten
-    (let* ((old-body (if (listp body)
-			 (copy-list body)
-			 body))
-	   (new-body (apply (if (primitivep body-operator)
+    (let ((new-body (apply (if (primitivep body-operator)
 				#'apply-primitive-f
 				#'invoke-f)
 			    (append (list body-operator)
@@ -73,28 +71,29 @@
 				      (list (copy-list procedure-args)
 					    procedure))
 				    (list procedure-pool)))))
-      (if (equalp old-body new-body)
-	  new-body
-	  (reduce-f new-body procedure procedure-pool)))))
+      (when new-body
+	(unless (equalp body new-body)
+	  (reduce-f new-body procedure procedure-pool))))))
 
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
   (let* ((procedure (gethash symbol
-			     (slot-vaue procedure-pool 'procedures)))
-	 (new-body (if (listp procedure-body)
-		       (copy-list procedure-body)
-		       (list procedure-body))))
-    (labels ((replace-params-by-args (params args body-list)
-	       (loop for sub-body in body-list
-		     collect (or (reduce #'or
-					 (mapcar #'(lambda (param item arg)
-						     (when (eq param item)
-						       (if (atom arg)
-							   arg
-							   (copy-list arg))))							 
-						 (subseq params 0 *param-size*)
-						 (make-list *param-size* :initial-element sub-body)
-						 (subseq args 0 *param-size*))))
-			     (if (atom sub-body)
-				 sub-body
-				 (replace-params-by-args params args sub-body)))))
-      (replace-params-by-args procedure-params args new-body))))
+			     (slot-vaue procedure-pool 'procedures))))
+    (when procedure
+      (let ((new-body (if (listp procedure-body)
+			  (copy-list procedure-body)
+			  (list procedure-body))))
+	(labels ((replace-params-by-args (params args body-list)
+		   (loop for sub-body in body-list
+			 collect (or (reduce #'or
+					     (mapcar #'(lambda (param item arg)
+							 (when (eq param item)
+							   (if (atom arg)
+							       arg
+							       (copy-list arg))))							 
+						     (subseq params 0 *param-size*)
+						     (make-list *param-size* :initial-element sub-body)
+						     (subseq args 0 *param-size*))))
+				 (if (atom sub-body)
+				     sub-body
+				     (replace-params-by-args params args sub-body)))))
+	  (replace-params-by-args procedure-params args new-body))))

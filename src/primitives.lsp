@@ -1,4 +1,3 @@
-
 (:in-package :com.libgirl.smcl)
   
 
@@ -34,10 +33,12 @@
 (defun special-primitive-p (procedure-name)
   (equal procedure-name 'when))
     
-(defun appy-primitive (primitive-name arg-parameters arg-defaults procedure procedure-pool)
-  ((gethash prim-name primitives) (car arg-pars) (cdr arg-pars) (car arg-defauls) (cdr arg-defauls)))
-
-
+(defun apply-primitive (primitive-name params default-args procedure procedure-pool)
+  (if (not (primitivep primitive-name))
+      (error "Apply Non-primitive Error")
+      (if (special-primitive-p primitive-name)
+	  ((gethash primitive-name primitives) (car params) (cdr params) (car arg-defauls) (cdr arg-defauls) prcedure procedure-pool)
+	  ((gethash primitive-name primitives) (car params) (cdr params) (car arg-defauls) (cdr arg-defauls)))))
 
       
   

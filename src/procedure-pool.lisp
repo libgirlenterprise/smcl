@@ -32,7 +32,7 @@
 			    body ; now the same as body unless recursion
 			    (if (atom (first body))
 				(first body)
-				'quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
+				'list-quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
     
     ;; reduce sub-procedure before invoke
     (unless (primitivep body-operator)

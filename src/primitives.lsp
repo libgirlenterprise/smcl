@@ -20,9 +20,9 @@
 			   (cdr param-x)
 			   nil))))
   (setf (gethash 'when primitives)
-	(lambda (param-x param-y default-arg-1 default-arg-2 procedure-pool)
+	(lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
 	  (list 'quote (if (reduce-f param-x procedure procedure-pool)
-			   ( param-y procedure procedure-pool)))))
+			   (reduce-f param-y procedure procedure-pool)))))
   
  ; (funcall (gethash 'quote  primitives) '(11 22) 33 99 44 55)
   )

@@ -46,15 +46,13 @@
 		(special-primitive-p body-operator))
       (let ((perfect-form))
 	(do* ((i 1 (incf i)))
-	     ((or (atom body) ; for the case being rewriten
-		  (if (>= (- i 1) (length body)) ; for the same case of the last line
-		      t
-		      (progn
-			(when perfect-form
-			  (setf (nth (- i 1) body)
-				perfect-form))
-			nil))
-		  (>= i (length body))))	  
+	     ((or (atom body) ; for the case body being rewriten
+		  (>= (- i 1) (length body)) ; for the same case of the last line
+		  (progn
+		    (when perfect-form
+		      (setf (nth (- i 1) body)
+			    perfect-form))
+		    (>= i (length body)))))	  
 	  (setf perfect-form (reduce-f (nth i body)
 				       procedure
 				       procedure-pool)))))

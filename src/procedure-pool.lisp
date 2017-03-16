@@ -40,7 +40,7 @@
 			   (if (atom (first body))
 			       (first body)
 			       'list-quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
-    (unless (find body-operator procedure-params) ; it means body-operator not determined because it is a parameter. This case body is perfect.
+    (unless (find body-operator procedure-params) ; it means body-operator not determined because it is a parameter. This case body is already perfect.
       
       ;; reduce sub-procedure before invoke
       (unless (primitivep body-operator)

@@ -117,7 +117,7 @@
 	  (replace-params-by-args procedure-params args new-body))))))
 
 (defmethod set-procedure (name params args body (procedure-pool procedure-pool))
-  (let* ((procedure (gethash name ; TODO: handle the case when name is not a symbol
+  (let* ((procedure (gethash name ; TODO & WARNING: handle the case when name is not a symbol
 			     (slot-value procedure-pool 'procedures)))
 	 (procedure-new-created-p (null procedure))
 	 (procedure (or procedure
@@ -128,6 +128,7 @@
 			(make-procedure) ; use an isolated procedure 
 			(make-instance 'procedure-pool)) ; and an isolated procedure-pool to reduce args
 	      args))
+    (setf procedure-body body) ;WARNING: should handle the case that body is not a proper format?
     (when procedure-new-created-p
       (setf (gethash name
 		     (slot-value procedure-pool 'procedures))

@@ -39,7 +39,7 @@
 	       (= *arg-size* (length (third procedure-form)))
 	       (reduce #'and (mapcar #'symbolp
 				     (third procedure-form)))
-	       (fourth procedure-form)) ; body, but we don't check the format temporarily
+	       (fourth procedure-form)) ; body, WARNING: we don't check the format temporarily
       (apply #'set-procedure (append procedure-form
 				     (list procedure-pool))))))
 

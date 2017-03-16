@@ -29,7 +29,17 @@
 
 (defmethod initialize-instance :after ((procedure-pool procedure-pool) &key init-procedures)
   (dolist (procedure-form init-procedures)
-    (when procedure-form
+    (when (and procedure-form
+	       (first procedure-form)
+	       (symbolp (first procedure-form)) ; name should be symbol
+	       (reduce #'and (cons t ; all non nil params should be symbols
+				   (mapcar #'symbolp
+					   (second procedure-form))))
+	       (third procedure-form) ; default arguments for this procedures
+	       (= *arg-size* (length (third procedure-form)))
+	       (reduce #'and (mapcar #'symbolp
+				     (third procedure-form)))
+	       (fourth procedure-form)) ; body, but we don't check the format temporarily
       (apply #'set-procedure (append procedure-form
 				     (list procedure-pool))))))
 

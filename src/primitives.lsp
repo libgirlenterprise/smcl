@@ -10,16 +10,16 @@
   (setf (gethash 'cons primitives)
 	(lambda (arg-p-x param-y default-arg-1 default-arg-2)
 	  (list 'list-quote arg-p-x param-y)))
-  ;(LIST-QUOTE 11 22) -> '11, that's just shiaka wants
+  ;(11 22) -> '11, that's just shiaka wants
   (setf (gethash 'car primitives)
 	(lambda (param-x param-y default-arg-1 default-arg-2)
 	  (list 'quote (if (listp param-x)
-			   (cadr param-x) ;(car (cdr (LIST-QUOTE 11 22))) -> 11
+			   (car param-x) 
 			   param-x))))
   (setf (gethash 'cdr primitives)
 	(lambda (param-x param-y default-arg-1 default-arg-2) 
 	  (list 'quote (if (listp param-x)
-			   (cddr param-x) ;(cdr (cdr (LIST-QUOTE 11 22))) -> 22
+			   (cdr param-x)
 			   'nil))))
   (setf (gethash 'when primitives)
 	(lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
@@ -37,7 +37,7 @@
 	      'nil)))
   (setf (gethash 't primitives) 't)
   (setf (gethash 'nil primitives) 'nil)
-  
+ 
   )
 
 

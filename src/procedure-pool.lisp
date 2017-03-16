@@ -27,6 +27,12 @@
       
 (defgeneric set-procedure (name params args body procedure-pool))
 
+(defmethod initialize-instance :after ((procedure-pool procedure-pool) &key init-procedures)
+  (dolist (procedure-form init-procedures)
+    (when procedure-form
+      (apply #'set-procedure (append procedure-form
+				     (list procedure-pool))))))
+
 (defmethod reduce-f (body procedure (procedure-pool procedure-pool))
   "Set the object to which the body bound to its best reduced form (perfect form). Return the body object, but returning nil for no further reduction."
   (let ((body-operator (if (atom body)

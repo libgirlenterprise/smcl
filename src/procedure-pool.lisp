@@ -79,7 +79,7 @@
 
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
   (let* ((procedure (gethash symbol
-			     (slot-vaue procedure-pool 'procedures))))
+			     (slot-value procedure-pool 'procedures))))
     (when procedure
       (let ((new-body (if (listp procedure-body)
 			  (copy-list procedure-body)
@@ -98,7 +98,7 @@
 				 (if (atom sub-body)
 				     sub-body
 				     (replace-params-by-args params args sub-body)))))
-	  (replace-params-by-args procedure-params args new-body))))
+	  (replace-params-by-args procedure-params args new-body))))))
 
 (defmethod set-procedure (name params args body (procedure-pool procedure-pool))
   (let* ((procedure (gethash name ; TODO: handle the case when name is not a symbol

@@ -40,7 +40,7 @@
 	       (reduce #'and (mapcar #'symbolp
 				     (third procedure-form)))
 	       (fourth procedure-form)) ; body, WARNING: we don't check the format temporarily
-      (apply #'set-procedure (append procedure-form
+      (apply #'set-procedure (append (copy-tree procedure-form)
 				     (list procedure-pool))))))
 
 (defmethod reduce-f (body procedure (procedure-pool procedure-pool))
@@ -84,9 +84,9 @@
 			     (append (list body-operator)
 				     (list (append (unless (atom body)						      
 						     (subseq body 1))
-						   (copy-list procedure-args))) ; WARNING: we might make it too long
+						   (copy-tree procedure-args))) ; WARNING: we might make it too long
 				     (when (primitivep body-operator)
-				       (list (copy-list procedure-args)
+				       (list (copy-tree procedure-args)
 					     procedure))
 				     (list procedure-pool)))))
 	(when new-body
@@ -98,7 +98,7 @@
 			     (slot-value procedure-pool 'procedures))))
     (when procedure
       (let ((new-body (if (listp procedure-body)
-			  (copy-list procedure-body)
+			  (copy-tree procedure-body)
 			  (list procedure-body))))
 	(labels ((replace-params-by-args (params args body-list)
 		   (loop for sub-body in body-list
@@ -107,7 +107,7 @@
 							 (when (eq param item)
 							   (if (atom arg)
 							       arg
-							       (copy-list arg))))							 
+							       (copy-tree arg))))							 
 						     (subseq params 0 *param-size*)
 						     (make-list *param-size* :initial-element sub-body)
 						     (subseq args 0 *param-size*))))

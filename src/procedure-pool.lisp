@@ -25,6 +25,7 @@
 
 (defgeneric invoke-f (symbol args procedure-pool)) ; should handle when symbol is not a symbol
       
+(defgeneric set-procedure (name params args body procedure-pool))
 
 (defmethod reduce-f (body procedure (procedure-pool procedure-pool))
   "Set the object to which the body bound to its best reduced form (perfect form). Return the body object, but returning nil for no further reduction."
@@ -98,3 +99,19 @@
 				     sub-body
 				     (replace-params-by-args params args sub-body)))))
 	  (replace-params-by-args procedure-params args new-body))))
+
+(defmethod set-procedure (name params args body (procedure-pool procedure-pool))
+  (let* ((procedure (gethash name ; TODO: handle the case when name is not a symbol
+			     (slot-value procedure-pool 'procedures)))
+	 (procedure-new-created-p (null procedure))
+	 (procedure (or procedure
+			(make-procedure)))) 
+    (setf procedure-params params)
+    (setf procedure-args args)
+    (setf procedure-body body)
+    (when procedure-new-created-p
+      (setf (gethash name
+		     (slot-value procedure-pool 'procedures))
+	    procedure))))
+
+    

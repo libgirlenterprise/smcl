@@ -37,15 +37,20 @@
 	      'nil)))
   (setf (gethash 't primitives) 't)
   (setf (gethash 'nil primitives) 'nil)
- 
+  (setf (gethash 'defun primitives)
+	(lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
+	  (if (primitivep (car para-x))
+	      (apply-primitive 
   )
 
 
 (defun primitivep (procedure-name)
   (if (gethash procedure primitives)
       t))
+
 (defun special-primitive-p (procedure-name)
-  (equal procedure-name 'when))
+  (or (equal procedure-name 'when)
+      (equal procedure-name 'defun)))
     
 (defun apply-primitive (primitive-name params default-args procedure procedure-pool)
   (if (not (primitivep primitive-name))

@@ -123,8 +123,11 @@
 	 (procedure (or procedure
 			(make-procedure)))) 
     (setf procedure-params params)
-    (setf procedure-args args)
-    (setf procedure-body body)
+    (setf procedure-args
+	  (or (reduce-f args
+			(make-procedure) ; use an isolated procedure 
+			(make-instance 'procedure-pool)) ; and an isolated procedure-pool to reduce args
+	      args))
     (when procedure-new-created-p
       (setf (gethash name
 		     (slot-value procedure-pool 'procedures))

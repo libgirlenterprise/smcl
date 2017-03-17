@@ -27,7 +27,7 @@
       
 (defgeneric set-procedure (name params args body procedure-pool))
 
-(defgeneric export (file-pathname procedure-pool))
+(defgeneric export-to-file (file-pathname procedure-pool))
 
 (defmethod initialize-instance :after ((procedure-pool procedure-pool) &key init-procedures)
   (dolist (procedure-form init-procedures)
@@ -136,7 +136,7 @@
 		     (slot-value procedure-pool 'procedures))
 	    procedure))))
 
-(defmethod export (file-pathname (procedure-pool procedure-pool))
+(defmethod export-to-file (file-pathname (procedure-pool procedure-pool))
   (with-open-file (file-output-stream (make-pathname file-pathname)
 				      :directiion :output
 				      :if-exists :supersede)

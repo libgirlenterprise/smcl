@@ -27,6 +27,8 @@
       
 (defgeneric set-procedure (name params args body procedure-pool))
 
+(defgeneric export (file-pathname procedure-pool))
+
 (defmethod initialize-instance :after ((procedure-pool procedure-pool) &key init-procedures)
   (dolist (procedure-form init-procedures)
     (when (and procedure-form
@@ -134,4 +136,18 @@
 		     (slot-value procedure-pool 'procedures))
 	    procedure))))
 
-    
+(defmethod export (file-pathname (procedure-pool procedure-pool))
+  (with-open-file (file-output-stream (make-pathname file-pathname)
+				      :directiion :output
+				      :if-exists :supersede)
+    (loop for procedure-name being the hash-keys in (slot-value procedure-pool 'procedures)
+	  do (let ((procedure (gethash procedure-name
+				       (slot-value procedure-pool 'procedures))))
+	       (format file-output-stream ; TODO: reindent file
+		       "(~a ~a ~a ~%~a)~%~%)"
+		       procedure-name
+		       (or procedure-params ; WARNING: Do we have to check if it's a list?
+			   "()")
+		       procedure-args
+		       procedure-body)))))
+			   

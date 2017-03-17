@@ -8,8 +8,9 @@
       (loop for procedure-name being the hash-keys in procedures
 	    do (let ((procedure (gethash procedure-name procedures)))
 		 (setf (slot-value procedure 'body)
-		       (reduce-f (slot-value procedure 'body)
-				 procedure
-				 procedure-pool)))))))
-      
-	
+		       (or (reduce-f (slot-value procedure 'body)
+				     procedure
+				     procedure-pool)
+			   (slot-value procedure 'body))))))))
+
+

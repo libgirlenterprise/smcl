@@ -27,6 +27,24 @@
       
 (defgeneric set-procedure (name params args body procedure-pool))
 
+(defgeneric export (file-pathname procedure-pool))
+
+(defmethod initialize-instance :after ((procedure-pool procedure-pool) &key init-procedures)
+  (dolist (procedure-form init-procedures)
+    (when (and procedure-form
+	       (first procedure-form)
+	       (symbolp (first procedure-form)) ; name should be symbol
+	       (reduce #'and (cons t ; all non nil params should be symbols
+				   (mapcar #'symbolp
+					   (second procedure-form))))
+	       (third procedure-form) ; default arguments for this procedures
+	       (= *arg-size* (length (third procedure-form)))
+	       (reduce #'and (mapcar #'symbolp
+				     (third procedure-form)))
+	       (fourth procedure-form)) ; body, WARNING: we don't check the format temporarily
+      (apply #'set-procedure (append (copy-tree procedure-form)
+				     (list procedure-pool))))))
+
 (defmethod reduce-f (body procedure (procedure-pool procedure-pool))
   "Set the object to which the body bound to its best reduced form (perfect form). Return the body object, but returning nil for no further reduction."
   (let ((body-operator (if (atom body)
@@ -34,7 +52,7 @@
 			   (if (atom (first body))
 			       (first body)
 			       'list-quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
-    (unless (find body-operator procedure-params) ; it means body-operator not determined because it is a parameter. This case body is perfect.
+    (unless (find body-operator procedure-params) ; it means body-operator not determined because it is a parameter. This case body is already perfect.
       
       ;; reduce sub-procedure before invoke
       (unless (primitivep body-operator)
@@ -68,9 +86,9 @@
 			     (append (list body-operator)
 				     (list (append (unless (atom body)						      
 						     (subseq body 1))
-						   (copy-list procedure-args))) ; WARNING: we might make it too long
+						   (copy-tree procedure-args))) ; WARNING: we might make it too long
 				     (when (primitivep body-operator)
-				       (list (copy-list procedure-args)
+				       (list (copy-tree procedure-args)
 					     procedure))
 				     (list procedure-pool)))))
 	(when new-body
@@ -82,7 +100,7 @@
 			     (slot-value procedure-pool 'procedures))))
     (when procedure
       (let ((new-body (if (listp procedure-body)
-			  (copy-list procedure-body)
+			  (copy-tree procedure-body)
 			  (list procedure-body))))
 	(labels ((replace-params-by-args (params args body-list)
 		   (loop for sub-body in body-list
@@ -91,7 +109,7 @@
 							 (when (eq param item)
 							   (if (atom arg)
 							       arg
-							       (copy-list arg))))							 
+							       (copy-tree arg))))							 
 						     (subseq params 0 *param-size*)
 						     (make-list *param-size* :initial-element sub-body)
 						     (subseq args 0 *param-size*))))
@@ -101,17 +119,35 @@
 	  (replace-params-by-args procedure-params args new-body))))))
 
 (defmethod set-procedure (name params args body (procedure-pool procedure-pool))
-  (let* ((procedure (gethash name ; TODO: handle the case when name is not a symbol
+  (let* ((procedure (gethash name ; TODO & WARNING: handle the case when name is not a symbol
 			     (slot-value procedure-pool 'procedures)))
 	 (procedure-new-created-p (null procedure))
 	 (procedure (or procedure
 			(make-procedure)))) 
     (setf procedure-params params)
-    (setf procedure-args args)
-    (setf procedure-body body)
+    (setf procedure-args
+	  (or (reduce-f args
+			(make-procedure) ; use an isolated procedure 
+			(make-instance 'procedure-pool)) ; and an isolated procedure-pool to reduce args
+	      args))
+    (setf procedure-body body) ;WARNING: should handle the case that body is not a proper format?
     (when procedure-new-created-p
       (setf (gethash name
 		     (slot-value procedure-pool 'procedures))
 	    procedure))))
 
-    
+(defmethod export (file-pathname (procedure-pool procedure-pool))
+  (with-open-file (file-output-stream (make-pathname file-pathname)
+				      :directiion :output
+				      :if-exists :supersede)
+    (loop for procedure-name being the hash-keys in (slot-value procedure-pool 'procedures)
+	  do (let ((procedure (gethash procedure-name
+				       (slot-value procedure-pool 'procedures))))
+	       (format file-output-stream ; TODO: reindent file
+		       "(~a ~a ~a ~%~a)~%~%)"
+		       procedure-name
+		       (or procedure-params ; WARNING: Do we have to check if it's a list?
+			   "()")
+		       procedure-args
+		       procedure-body)))))
+			   

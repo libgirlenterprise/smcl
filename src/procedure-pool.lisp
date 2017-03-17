@@ -12,6 +12,14 @@
 
 (defparameter *arg-size* 2)
 
+(defvar *user-input-funcion*)
+
+(defun make-user-input-function (output-file-pathname procedure-pool) ;WARNING: we haven't handle file access error
+  (lambda ()
+    (case (read)
+      ('export (export-to-file output-file-pathname procedure-pool))
+      ('exit (sb-ext:exit)))))
+
 (defstruct procedure
   (params :type list)
   (args :type list (make-list *arg-size* :initial-element '0))
@@ -69,10 +77,11 @@
 	       ((or (atom body) ; for the case body being rewriten
 		    (>= (- i 1) (length body)) ; for the same case of the last line
 		    (progn
-		      (when perfect-form
-			(setf (nth (- i 1) body)
-			      perfect-form))
-		      (>= i (length body)))))	  
+		      (and perfect-form
+			   (setf (nth (- i 1) body)
+				 perfect-form)
+			   (funcall *user-input-funcion*))
+		      (>= i (length body)))))  
 	    (setf perfect-form (reduce-f (nth i body)
 					 procedure
 					 procedure-pool)))))

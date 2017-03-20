@@ -1,4 +1,4 @@
-(:in-package :com.libgirl.smcl)
+; (:in-package :com.libgirl.smcl)
   
 
 (let ((primitives nil))
@@ -6,10 +6,10 @@
   ;11 22 -> (LIST-QUOTE 11 22)
   (setf (gethash 'list-quote primitives)
         (lambda (param-x param-y default-arg-1 default-arg-2)
-	  (list 'list-quote arg-p-x param-y)))
+	  (list 'list-quote param-x param-y)))
   (setf (gethash 'cons primitives)
-	(lambda (arg-p-x param-y default-arg-1 default-arg-2)
-	  (list 'list-quote arg-p-x param-y)))
+	(lambda (param-x param-y default-arg-1 default-arg-2)
+	  (list 'list-quote param-x param-y)))
   ;('list-quote '11 '22) -> '11, that's just shaka wants
   (setf (gethash 'car primitives)
 	(lambda (param-x param-y default-arg-1 default-arg-2)
@@ -43,14 +43,14 @@
    		 (name (if (listp param-a)
 			   (if (listp (second param-a))
 			       (first (second param-a))
-			       (second param-a)
+			       (second param-a))
    			   param-a))
    		 (body param-y))
    	    (if (primitivep name)
-  		(apply-primitive name (list body default-args-1) (list default-args-1 default-arg-2) procedure procedure-pool)
+  		(apply-primitive name (list body default-arg-1) (list default-arg-1 default-arg-2) procedure procedure-pool)
    		(create-procedure-ingredient-list param-a default-arg-1 default-arg-2)
-   		 )))))
-  )
+		)))))
+  
 
 
 
@@ -67,8 +67,8 @@
   (if (not (primitivep primitive-name))
       (error "Apply Non-primitive Error")
       (if (special-primitive-p primitive-name)
-	  ((gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) prcedure procedure-pool)
-	  ((gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
+	  (funcall(gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) prcedure procedure-pool)
+	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
 
 
 ;retun a cons list
@@ -115,5 +115,4 @@
    (create-procedure-ingredient-list (list 'list-quote 'X1 'X2) 'arg1 'ar2))
   
 		   
-	
   

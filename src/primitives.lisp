@@ -20,7 +20,7 @@
       (lambda (param-x param-y default-arg-1 default-arg-2) 
 	(list 'quote (if (listp param-x)
 			 (cdr param-x) ;not (cdr (second param-x))??
-			 'nil))))
+			 'ni))))
 (setf (gethash 'when primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
 	(list 'list-quote (if (reduce-f param-x procedure procedure-pool) ;Is 'list-quote necessary here?
@@ -28,15 +28,15 @@
 (setf (gethash 'eq primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	(if (equal param-x param-y)
-	    't
-	    'nil)))
+	    'tr
+	    'ni)))
 (setf (gethash 'atom primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	(if (not (listp param-x))
-	    't
-	    'nil)))
-(setf (gethash 't primitives) 't)
-(setf (gethash 'nil primitives) 'nil)
+	    'tr
+	    'ni)))
+(setf (gethash 'tr primitives) 'tr)
+(setf (gethash 'ni primitives) 'ni)
 (setf (gethash 'defun primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
 	(let* ((param-a (reduce-f param-x procedure procedure-pool))

@@ -1,6 +1,5 @@
 *.fasl
 unit-test.lisp
-test-primitives.lisp
 *lisp-unit.lisp*
 *primitives.lsp*
 *test-primitives.lisp*

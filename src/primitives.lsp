@@ -19,7 +19,7 @@
   (setf (gethash 'cdr primitives)
 	(lambda (param-x param-y default-arg-1 default-arg-2) 
 	  (list 'quote (if (listp param-x)
-			   (cdr param-x)
+			   (cdr param-x) ;not (cdr (second param-x))??
 			   'nil))))
   (setf (gethash 'when primitives)
 	(lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
@@ -41,12 +41,14 @@
 	(lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
    	  (let* ((param-a (reduce-f param-x procedure procedure-pool))
    		 (name (if (listp param-a)
-			   ;; create-procedure-ingredient-list
+			   (if (listp (second param-a))
+			       (first (second param-a))
+			       (second param-a)
    			   param-a))
    		 (body param-y))
    	    (if (primitivep name)
   		(apply-primitive name (list body default-args-1) (list default-args-1 default-arg-2) procedure procedure-pool)
-   		(
+   		(create-procedure-ingredient-list param-a default-arg-1 default-arg-2)
    		 )))))
   )
 
@@ -71,7 +73,8 @@
 
 ;retun a cons list
 (defun create-procedure-ingredient-list (param-a default-arg-1 default-arg-2)
-  (let ((default-param-args (list :none default-arg-1 :none default-arg-2)))
+  (let ((default-param-args (list :none default-arg-1 :none default-arg-2))
+	(flated-a (flate-param param-a)))
     (labels ((create-list (param-a param-args)
 	       (if (and (atom param-a)  param-args)
 		   param-args
@@ -87,6 +90,10 @@
 	  body)
       (cons (find-unprimitive-symbol (car body)) (find-unprimitive-symbol (cdr body)))))
 
+(defun flate-param (param)
+  (if (lisp param)
+      (append (flate-param (second param)) (flate-param (third param)))
+      param))
 
 	
 ;Test 'car

@@ -1,21 +1,21 @@
 ;;;; TODO:
 ;;;; 1. exception handling
 
-(:in-package :cl-user)
+(in-package :cl-user)
 (defpackage com.libgirl.smcl
   (:use :cl)
   (:export :smcl-run))
 
-(:in-package :com.libgirl.smcl)
+(in-package :com.libgirl.smcl)
 
 (defparameter *param-size* 2)
 
 (defparameter *arg-size* 2)
 
 (defstruct procedure
-  (params :type list)
-  (args :type list (make-list *arg-size* :initial-element '0))
-  (body :type list)) ; should handle null case or any atom in list is not a symbol
+  (params nil :type list)
+  (args (make-list *arg-size* :initial-element '0) :type list)
+  (body nil :type list)) ; should handle null case or any atom in list is not a symbol
 
 (defclass procedure-pool ()
   ((procedures :type hash-table
@@ -34,13 +34,10 @@
     (when (and procedure-form
 	       (first procedure-form)
 	       (symbolp (first procedure-form)) ; name should be symbol
-	       (reduce #'and (cons t ; all non nil params should be symbols
-				   (mapcar #'symbolp
-					   (second procedure-form))))
+	       (every #'symbolp
+		      (second procedure-form)) ; all non nil params should be symbols
 	       (third procedure-form) ; default arguments for this procedures
-	       (= *arg-size* (length (third procedure-form)))
-	       (reduce #'and (mapcar #'symbolp
-				     (third procedure-form)))
+	       (= *arg-size* (length (third procedure-form))) ; WARNING: we don't check the format of each default argument temporarily
 	       (fourth procedure-form)) ; body, WARNING: we don't check the format temporarily
       (apply #'set-procedure (append (copy-tree procedure-form)
 				     (list procedure-pool))))))
@@ -104,18 +101,18 @@
 			  (list procedure-body))))
 	(labels ((replace-params-by-args (params args body-list)
 		   (loop for sub-body in body-list
-			 collect (or (reduce #'or
-					     (mapcar #'(lambda (param item arg)
-							 (when (eq param item)
-							   (if (atom arg)
-							       arg
-							       (copy-tree arg))))							 
-						     (subseq params 0 *param-size*)
-						     (make-list *param-size* :initial-element sub-body)
-						     (subseq args 0 *param-size*))))
-				 (if (atom sub-body)
-				     sub-body
-				     (replace-params-by-args params args sub-body)))))
+			 collect (or (some #'(lambda (param item arg)
+					       (when (eq param item)
+						 (if (atom arg)
+						     arg
+						     (copy-tree arg))))							 
+					   (mapcar #'list
+						   (subseq params 0 *param-size*)
+						   (make-list *param-size* :initial-element sub-body)
+						   (subseq args 0 *param-size*)))
+				     (if (atom sub-body)
+					 sub-body
+					 (replace-params-by-args params args sub-body))))))
 	  (replace-params-by-args procedure-params args new-body))))))
 
 (defmethod set-procedure (name params args body (procedure-pool procedure-pool))

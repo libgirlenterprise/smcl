@@ -1,6 +1,6 @@
 ; (:in-package :com.libgirl.smcl)
   
-(defparameter *primitives* nil)
+(defparameter primitives nil)
 
 (setf primitives (make-hash-table))
 ;;11 22 -> (LIST-QUOTE 11 22)
@@ -67,21 +67,20 @@
   (if (not (primitivep primitive-name))
       (error "Apply Non-primitive Error")
       (if (special-primitive-p primitive-name)
-	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) prcedure procedure-pool)
+	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
 	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
 
 
 
 ;retun a cons list
 (defun create-procedure-ingredient-list (param-a default-arg-1 default-arg-2)
-  (let ((default-param-args (list :none default-arg-1 :none default-arg-2))
+  (let ((default-param-args (list :name :none default-arg-1 :none default-arg-2))
 	(flated-a (flate-param param-a)))
-    (labels ((create-list (param-a param-args)
-	       (if (and (atom param-a)  param-args)
-		   param-args
-		   (cons (car param-a) (create-list (cdr param-a) (cdr param-args)))
-		   )))
-      (create-list param-a default-param-args))))
+    (labels ((compose-list (flated-a param-args)
+	       (if (and flated-a param-args)
+		   (append (list (car flated-a)) (compose-list (cdr flated-a) (cdr param-args)))
+		   param-args)))
+      (compose-list flated-a default-param-args))))
 
 
 (defun find-unprimitive-symbol (body)
@@ -91,10 +90,14 @@
 	  body)
       (cons (find-unprimitive-symbol (car body)) (find-unprimitive-symbol (cdr body)))))
 
-(defun flate-param (param)
-  (if (listp param)
+
+;;all result is a list
+;;Be careful second and third are not for the future
+(defun flate-param (param)		
+  (if (atom param)
+      (list param)
       (append (flate-param (second param)) (flate-param (third param)))
-      param))
+      ))
 
 	
 ;Test 'car
@@ -114,6 +117,7 @@
 (defun test-create-procedure-ingredient-list ()
   (print (create-procedure-ingredient-list 'list-quote 'arg1 'arg2))
   (create-procedure-ingredient-list (list 'list-quote 'X1 'X2) 'arg1 'ar2))
+
 
 
 

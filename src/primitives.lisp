@@ -3,14 +3,14 @@
 (defparameter *primitives* nil)
 
 (setf primitives (make-hash-table))
-					;11 22 -> (LIST-QUOTE 11 22)
+;;11 22 -> (LIST-QUOTE 11 22)
 (setf (gethash 'list-quote primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	(list 'list-quote param-x param-y)))
 (setf (gethash 'cons primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	(list 'list-quote param-x param-y)))
-					;('list-quote '11 '22) -> '11, that's just shaka wants
+;;('list-quote '11 '22) -> '11, that's just shaka wants
 (setf (gethash 'car primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	(list 'quote (if (listp param-x)
@@ -19,24 +19,24 @@
 (setf (gethash 'cdr primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2) 
 	(list 'quote (if (listp param-x)
-			 (cdr param-x) ;not (cdr (second param-x))??
-			 'ni))))
+			 (subseq param-x 1) ;not (cdr (second param-x))??
+			 'none))))
 (setf (gethash 'when primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
-	(list 'list-quote (if (reduce-f param-x procedure procedure-pool) ;Is 'list-quote necessary here?
+	(list 'list-quote (if (reduce-f param-x procedure procedure-pool) ;Is 'list-quote necessary here? No
 			      (reduce-f param-y procedure procedure-pool)))))
 (setf (gethash 'eq primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	(if (equal param-x param-y)
-	    'tr
-	    'ni)))
+	    'true
+	    'none)))
 (setf (gethash 'atom primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	(if (not (listp param-x))
-	    'tr
-	    'ni)))
-(setf (gethash 'tr primitives) 'tr)
-(setf (gethash 'ni primitives) 'ni)
+	    'true
+	    'none)))
+(setf (gethash 'true primitives) 'true)
+(setf (gethash 'none primitives) 'none)
 (setf (gethash 'defun primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
 	(let* ((param-a (reduce-f param-x procedure procedure-pool))
@@ -107,13 +107,15 @@
 ;; (lambda (param-x param-y default-arg-1 default-arg-2) 
 ;;    (list 'quote (if (listp param-x)
 ;; 		    (cdr param-x) 
-;; 		    'nil)))
+;; 		    'nonel)))
 
 
 
 (defun test-create-procedure-ingredient-list ()
   (print (create-procedure-ingredient-list 'list-quote 'arg1 'arg2))
-   (create-procedure-ingredient-list (list 'list-quote 'X1 'X2) 'arg1 'ar2))
-  
+  (create-procedure-ingredient-list (list 'list-quote 'X1 'X2) 'arg1 'ar2))
+
+
+
 		   
   

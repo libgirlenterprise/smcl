@@ -1,4 +1,4 @@
-(:in-package :com.libgirl.smcl)
+(in-package :com.libgirl.smcl)
   
 
 (let ((primitives nil))

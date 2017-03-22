@@ -1,5 +1,20 @@
-; (:in-package :com.libgirl.smcl)
-  
+(in-package :com.libgirl.smcl)
+
+(defun primitivep (procedure-name)
+  (if (gethash procedure-name primitives)
+      t))
+
+(defun special-primitive-p (procedure-name)
+  (or (equal procedure-name 'when)
+      (equal procedure-name 'defun)))
+    
+(defun apply-primitive (primitive-name params default-args procedure procedure-pool)
+  (if (not (primitivep primitive-name))
+      (error "Apply Non-primitive Error")
+      (if (special-primitive-p primitive-name)
+	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
+	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
+
 (defparameter primitives nil)
 
 (setf primitives (make-hash-table))
@@ -50,25 +65,6 @@
 	      (apply-primitive name (list body default-arg-1) (list default-arg-1 default-arg-2) procedure procedure-pool)
 	      (create-procedure-ingredient-list param-a default-arg-1 default-arg-2)
 	      ))))
-  
-(defun primitivep (procedure-name)
-  (if (gethash procedure-name primitives)
-      t))
-
-(defun special-primitive-p (procedure-name)
-  (or (equal procedure-name 'when)
-      (equal procedure-name 'defun)))
-    
-(defun apply-primitive (primitive-name params default-args procedure procedure-pool)
-  (if (not (primitivep primitive-name))
-      (error "Apply Non-primitive Error")
-      (if (special-primitive-p primitive-name)
-	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
-	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
-
-
-
-
 
 ;retun a cons list
 (defun create-procedure-ingredient-list (param-a default-arg-1 default-arg-2)
@@ -80,15 +76,6 @@
 		   param-args)))
       (compose-list flated-a default-param-args))))
 
-
-(defun find-unprimitive-symbol (body)
-  (if (atom body)
-      (if (primitivep body)
-	  ;; find the other way
-	  body)
-      (cons (find-unprimitive-symbol (car body)) (find-unprimitive-symbol (cdr body)))))
-
-
 ;;all result is a list
 ;;Be careful second and third are not for the future
 (defun flate-param (param)		
@@ -97,8 +84,12 @@
       (append (flate-param (second param)) (flate-param (third param)))
       ))
 
+(defun get-parameter-count (procedure-ingredient-list)
+  (count :none procedure-ingredient-list))
 
-
-
-		   
-  
+(defun find-unprimitive-symbol (body)
+  (if (atom body)
+      (if (primitivep body)
+	  nil
+	  (list body))
+      (append (find-unprimitive-symbol (car body)) (find-unprimitive-symbol (cdr body)))))  

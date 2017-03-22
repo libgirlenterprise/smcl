@@ -54,3 +54,18 @@
   (assert-equal (list 'a 'b 'c 'd 'arg2) (create-procedure-ingredient-list *list-list-list* 'arg1 'arg2))
   (assert-equal (list 'a 'b 'c 'd 'e) (create-procedure-ingredient-list *big-list* 'arg1 'arg2))
   )
+
+(define-test test-get-parameter-count
+  (assert-equal 0 (get-parameter-count (list 'a 'b 'c 'd 'arg2)))
+  (assert-equal 1 (get-parameter-count (list 'a 'b 'c :none 'arg2)))
+  (assert-equal 2 (get-parameter-count (list 'a :none 'arg1 :none 'arg2))))
+
+(define-test test-find-unprimitve-symbol
+  (assert-equal nil (fin
+
+
+
+
+
+
+		     

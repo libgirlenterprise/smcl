@@ -1,4 +1,7 @@
 ;; use lisp-unit
+;;(ql:quickload "smcl")
+
+;;(in-package :com.libgirl.smcl)
 
 (REMOVE-TESTS :ALL)
 (defparameter *symbol-a* 'a)
@@ -60,8 +63,8 @@
   (assert-equal 1 (get-parameter-count (list 'a 'b 'c :none 'arg2)))
   (assert-equal 2 (get-parameter-count (list 'a :none 'arg1 :none 'arg2))))
 
-(define-test test-find-unprimitve-symbol
-  (assert-equal nil (fin
+;; (define-test test-find-unprimitve-symbol
+;;   (assert-equal nil (fin
 
 
 

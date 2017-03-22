@@ -12,7 +12,7 @@
 
 (defparameter *arg-size* 2)
 
-(defvar *user-input-funcion*)
+(defvar *user-input-function*)
 
 (defun make-user-input-function (output-file-pathname procedure-pool) ;WARNING: we haven't handle file access error
   (lambda ()

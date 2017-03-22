@@ -43,7 +43,7 @@
   (is-type empty-procedure-pool 'com.libgirl.smcl::procedure-pool)
   (is-type procedures 'hash-table)
   (ok (not (loop for name being the hash-keys in procedures
-	    count name into counted
-	    return counted))))
+		 count name into counted
+		 return counted))))
 
 (finalize)

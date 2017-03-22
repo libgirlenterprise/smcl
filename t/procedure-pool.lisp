@@ -22,19 +22,18 @@
 		      :wait nil))
 
 ;;; test export or non-export of com.libgirl.smcl
-(plan (+ 1 (length *non-export-symbol-list*)))
-(ok (every #'(lambda (symbol)
-	       (ok (not (find-symbol symbol))))
-	   *non-export-symbol-list*))
-(plan (+ 1 (* 2 (length *non-export-symbol-list*))))
-(ok (every #'(lambda (symbol)
-	       (multiple-value-bind (when-symbol status)
-		   (find-symbol symbol 'com.libgirl.smcl)
-		 (ok when-symbol)
-		 (is status :internal)))
-	   *non-export-symbol-list*))
+(plan (* 2 (length *non-export-symbol-list*)))
+(mapcar #'(lambda (symbol)
+	    (ok (not (find-symbol symbol)))
+	    (is-values (find-symbol symbol 'com.libgirl.smcl)
+		       (list (intern symbol 'com.libgirl.smcl)
+			     :internal)))
+	   *non-export-symbol-list*)
+(finalize)
+
 (plan 1)
 (ok (find-symbol "SMCL-RUN"))
+(finalize)
 
 
 (plan 1)

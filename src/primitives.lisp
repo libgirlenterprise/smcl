@@ -51,10 +51,6 @@
 	      (create-procedure-ingredient-list param-a default-arg-1 default-arg-2)
 	      ))))
   
-
-
-
-
 (defun primitivep (procedure-name)
   (if (gethash procedure-name primitives)
       t))
@@ -69,6 +65,8 @@
       (if (special-primitive-p primitive-name)
 	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
 	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
+
+
 
 
 
@@ -98,25 +96,6 @@
       (list param)
       (append (flate-param (second param)) (flate-param (third param)))
       ))
-
-	
-;Test 'car
-;; ((lambda (param-x param-y default-arg-1 default-arg-2) 
-;;   (list 'quote (if (listp param-x)
-;; 		   (car param-x)
-;; 		   param-x)))
-;;  (list 'LIST-QUOTE 11 22) 33 44 55)
-					;Test 'cdr
-;; (lambda (param-x param-y default-arg-1 default-arg-2) 
-;;    (list 'quote (if (listp param-x)
-;; 		    (cdr param-x) 
-;; 		    'nonel)))
-
-
-
-(defun test-create-procedure-ingredient-list ()
-  (print (create-procedure-ingredient-list 'list-quote 'arg1 'arg2))
-  (create-procedure-ingredient-list (list 'list-quote 'X1 'X2) 'arg1 'ar2))
 
 
 

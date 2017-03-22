@@ -1,4 +1,6 @@
 (in-package :cl-user)
+(ql:quickload "smcl")
+
 (defpackage com.libgirl.smcl-test.procedure-pool
   (:use :cl :com.libgirl.smcl :prove))
 (in-package :com.libgirl.smcl-test.procedure-pool)

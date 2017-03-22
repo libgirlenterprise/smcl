@@ -38,6 +38,14 @@
 (finalize)
 
 
+;;; TODO: should use a better way to resolve package issue
+(import	(mapcar #'find-symbol
+		*non-export-symbol-list*
+		(make-list (length *non-export-symbol-list*)
+			   :initial-element 'com.libgirl.smcl)))
+(import 'com.libgirl.smcl::initialize-instance)
+
+
 ;;;null case
 (plan 3)
 (let* ((empty-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
@@ -46,6 +54,13 @@
   (is-type procedures 'hash-table)
   (ok (not (loop for name being the hash-keys in procedures
 		 count name into counted
-		 return counted))))
+		 return counted)))
+  (finalize)
 
-(finalize)
+  ;;test empty pool to start reduce-f
+  (plan 1)
+  (ok (not (com.libgirl.smcl::reduce-f 'x
+		     (com.libgirl.smcl::make-procedure)
+		     empty-procedure-pool)))
+  (finalize))
+

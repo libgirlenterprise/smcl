@@ -37,9 +37,9 @@
 (ok (find-symbol "SMCL-RUN"))
 (finalize)
 
-(plan 3)
 
 ;;;null case
+(plan 3)
 (let* ((empty-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
        (procedures (slot-value empty-procedure-pool 'com.libgirl.smcl::procedures)))
   (is-type empty-procedure-pool 'com.libgirl.smcl::procedure-pool)

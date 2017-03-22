@@ -5,3 +5,4 @@ unit-test.lisp
 .*primitives.lisp*
 *primitives.lsp*
 *pre-script.lisp*
+*script.lisp*

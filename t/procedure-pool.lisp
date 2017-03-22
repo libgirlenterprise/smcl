@@ -35,12 +35,17 @@
 (ok (find-symbol "SMCL-RUN"))
 (finalize)
 
-
-(plan 1)
+(plan 3)
 
 ;;;null case
-(let ((empty-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool)))
-  (is-type empty-procedure-pool 'com.libgirl.smcl::procedure-pool))
+(let* ((empty-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
+       (procedures (slot-value empty-procedure-pool 'com.libgirl.smcl::procedures)))
+  (is-type empty-procedure-pool 'com.libgirl.smcl::procedure-pool)
+  (is-type procedures 'hash-table)
+  (is (loop for name being the hash-keys in procedures
+	    count name into counted
+	    return counted)
+      nil))
+  
 
 (finalize)
-  

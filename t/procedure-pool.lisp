@@ -42,10 +42,8 @@
        (procedures (slot-value empty-procedure-pool 'com.libgirl.smcl::procedures)))
   (is-type empty-procedure-pool 'com.libgirl.smcl::procedure-pool)
   (is-type procedures 'hash-table)
-  (is (loop for name being the hash-keys in procedures
+  (ok (not (loop for name being the hash-keys in procedures
 	    count name into counted
-	    return counted)
-      nil))
-  
+	    return counted))))
 
 (finalize)

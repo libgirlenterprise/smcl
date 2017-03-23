@@ -56,8 +56,9 @@
       (unless (primitivep body-operator)
 	(let ((sub-procedure (gethash body-operator
 				      (slot-value procedure-pool 'procedures))))
-	  (reduce-f (procedure-body sub-procedure)
-		    sub-procedure procedure-pool)))
+	  (when sub-procedure
+	    (reduce-f (procedure-body sub-procedure)
+		    sub-procedure procedure-pool))))
 
       ;; unless the operator is special-primitive-p, reduce arguments of this body
       (unless (or (atom body)

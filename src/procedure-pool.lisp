@@ -104,15 +104,16 @@
 			  (list (procedure-body procedure)))))
 	(labels ((replace-params-by-args (params args body-list)
 		   (loop for sub-body in body-list
-			 collect (or (some #'(lambda (param item arg)
-					       (when (eq param item)
-						 (if (atom arg)
-						     arg
-						     (copy-tree arg))))							 
-					   (mapcar #'list
-						   (subseq params 0 *param-size*)
-						   (make-list *param-size* :initial-element sub-body)
-						   (subseq args 0 *param-size*)))
+			 collect (or (when params
+				       (some #'(lambda (param item arg)
+						 (when (eq param item)
+						   (if (atom arg)
+						       arg
+						       (copy-tree arg))))							 
+					     (mapcar #'list
+						     params
+						     (make-list *param-size* :initial-element sub-body)
+						     args)))
 				     (if (atom sub-body)
 					 sub-body
 					 (replace-params-by-args params args sub-body))))))

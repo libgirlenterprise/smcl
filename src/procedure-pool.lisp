@@ -8,7 +8,7 @@
 
 (in-package :com.libgirl.smcl)
 
-(defparameter *param-size* 2)
+(defparameter *max-param-size* 2)
 
 (defparameter *arg-size* 2)
 
@@ -34,8 +34,8 @@
     (when (and procedure-form
 	       (first procedure-form)
 	       (symbolp (first procedure-form)) ; name should be symbol
-	       (every #'symbolp
-		      (second procedure-form)) ; all non nil params should be symbols
+	       (every #'symbolp ; all non nil params should be symbols
+		      (second procedure-form)) ; WARNING: we haven't check the param size
 	       (third procedure-form) ; default arguments for this procedures
 	       (= *arg-size* (length (third procedure-form))) ; WARNING: we don't check the format of each default argument temporarily
 	       (fourth procedure-form)) ; body, WARNING: we don't check the format temporarily
@@ -112,7 +112,7 @@
 						       (copy-tree arg))))							 
 					     (mapcar #'list
 						     params
-						     (make-list *param-size* :initial-element sub-body)
+						     (make-list *max-param-size* :initial-element sub-body)
 						     args)))
 				     (if (atom sub-body)
 					 sub-body

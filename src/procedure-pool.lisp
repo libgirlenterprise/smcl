@@ -8,7 +8,7 @@
 
 (in-package :com.libgirl.smcl)
 
-(defparameter *param-size* 2)
+(defparameter *max-param-size* 2)
 
 (defparameter *arg-size* 2)
 
@@ -23,7 +23,7 @@
 (defstruct procedure
   (params nil :type list)
   (args (make-list *arg-size* :initial-element '0) :type list)
-  (body nil :type list)) ; should handle null case or any atom in list is not a symbol
+  (body nil)) ; should handle null case or any atom in list is not a symbol
 
 (defclass procedure-pool ()
   ((procedures :type hash-table
@@ -42,8 +42,8 @@
     (when (and procedure-form
 	       (first procedure-form)
 	       (symbolp (first procedure-form)) ; name should be symbol
-	       (every #'symbolp
-		      (second procedure-form)) ; all non nil params should be symbols
+	       (every #'symbolp ; all non nil params should be symbols
+		      (second procedure-form)) ; WARNING: we haven't check the param size
 	       (third procedure-form) ; default arguments for this procedures
 	       (= *arg-size* (length (third procedure-form))) ; WARNING: we don't check the format of each default argument temporarily
 	       (fourth procedure-form)) ; body, WARNING: we don't check the format temporarily
@@ -113,15 +113,16 @@
 			  (list (procedure-body procedure)))))
 	(labels ((replace-params-by-args (params args body-list)
 		   (loop for sub-body in body-list
-			 collect (or (some #'(lambda (param item arg)
-					       (when (eq param item)
-						 (if (atom arg)
-						     arg
-						     (copy-tree arg))))							 
-					   (mapcar #'list
-						   (subseq params 0 *param-size*)
-						   (make-list *param-size* :initial-element sub-body)
-						   (subseq args 0 *param-size*)))
+			 collect (or (when params
+				       (some #'(lambda (param item arg)
+						 (when (eq param item)
+						   (if (atom arg)
+						       arg
+						       (copy-tree arg))))							 
+					     (mapcar #'list
+						     params
+						     (make-list *max-param-size* :initial-element sub-body)
+						     args)))
 				     (if (atom sub-body)
 					 sub-body
 					 (replace-params-by-args params args sub-body))))))

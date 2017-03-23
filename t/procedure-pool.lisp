@@ -10,6 +10,9 @@
 					 "*USER-INPUT-FUNCTION*"
 					 "MAKE-USER-INPUT-FUNCTION"
 					 "PROCEDURE"
+					 "PROCEDURE-PARAMS"
+					 "PROCEDURE-ARGS"
+					 "PROCEDURE-BODY"
 					 "PROCEDURE-POOL"
 					 "REDUCE-F"
 					 "INVOKE-F"
@@ -38,23 +41,13 @@
 (finalize)
 
 
-;;; TODO: should use a better way to resolve package issue
-(import	(mapcar #'find-symbol
-		*non-export-symbol-list*
-		(make-list (length *non-export-symbol-list*)
-			   :initial-element 'com.libgirl.smcl)))
-(import 'com.libgirl.smcl::initialize-instance)
-
-
 ;;;null case
 (plan 3)
 (let* ((empty-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
        (procedures (slot-value empty-procedure-pool 'com.libgirl.smcl::procedures)))
   (is-type empty-procedure-pool 'com.libgirl.smcl::procedure-pool)
   (is-type procedures 'hash-table)
-  (ok (not (loop for name being the hash-keys in procedures
-		 count name into counted
-		 return counted)))
+  (is (hash-table-count procedures) 0)
   (finalize)
 
   ;;test empty pool to start reduce-f

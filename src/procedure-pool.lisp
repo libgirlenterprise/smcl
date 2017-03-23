@@ -15,7 +15,7 @@
 (defstruct procedure
   (params nil :type list)
   (args (make-list *arg-size* :initial-element '0) :type list)
-  (body nil :type list)) ; should handle null case or any atom in list is not a symbol
+  (body nil)) ; should handle null case or any atom in list is not a symbol
 
 (defclass procedure-pool ()
   ((procedures :type hash-table

@@ -57,13 +57,15 @@
 			   (if (atom (first body))
 			       (first body)
 			       'list-quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
-    (unless (find body-operator procedure-params) ; it means body-operator not determined because it is a parameter. This case body is already perfect.
+    (unless (find body-operator
+		  (procedure-params procedure)) ; it means body-operator not determined because it is a parameter. This case body is already perfect.
       
       ;; reduce sub-procedure before invoke
       (unless (primitivep body-operator)
 	(let ((sub-procedure (gethash body-operator
-				      (slot-vaue procedure-pool 'procedures))))
-	  (reduce-f sub-procedure-body sub-procedure procedure-pool)))
+				      (slot-value procedure-pool 'procedures))))
+	  (reduce-f (procedure-body sub-procedure)
+		    sub-procedure procedure-pool)))
 
       ;; unless the operator is special-primitive-p, reduce arguments of this body
       (unless (or (atom body)
@@ -92,9 +94,9 @@
 			     (append (list body-operator)
 				     (list (append (unless (atom body)						      
 						     (subseq body 1))
-						   (copy-tree procedure-args))) ; WARNING: we might make it too long
+						   (copy-tree (procedure-args procedure)))) ; WARNING: we might make it too long
 				     (when (primitivep body-operator)
-				       (list (copy-tree procedure-args)
+				       (list (copy-tree (procedure-args procedure))
 					     procedure))
 				     (list procedure-pool)))))
 	(when new-body
@@ -105,9 +107,9 @@
   (let* ((procedure (gethash symbol
 			     (slot-value procedure-pool 'procedures))))
     (when procedure
-      (let ((new-body (if (listp procedure-body)
-			  (copy-tree procedure-body)
-			  (list procedure-body))))
+      (let ((new-body (if (listp (procedure-body procedure))
+			  (copy-tree (procedure-body procedure))
+			  (list (procedure-body procedure)))))
 	(labels ((replace-params-by-args (params args body-list)
 		   (loop for sub-body in body-list
 			 collect (or (some #'(lambda (param item arg)
@@ -122,7 +124,9 @@
 				     (if (atom sub-body)
 					 sub-body
 					 (replace-params-by-args params args sub-body))))))
-	  (replace-params-by-args procedure-params args new-body))))))
+	  (replace-params-by-args (procedure-params procedure)
+				  args
+				  new-body))))))
 
 (defmethod set-procedure (name params args body (procedure-pool procedure-pool))
   (let* ((procedure (gethash name ; TODO & WARNING: handle the case when name is not a symbol
@@ -130,13 +134,14 @@
 	 (procedure-new-created-p (null procedure))
 	 (procedure (or procedure
 			(make-procedure)))) 
-    (setf procedure-params params)
-    (setf procedure-args
+    (setf (procedure-params procedure)
+	  params)
+    (setf (procedure-args procedure)
 	  (or (reduce-f args
 			(make-procedure) ; use an isolated procedure 
 			(make-instance 'procedure-pool)) ; and an isolated procedure-pool to reduce args
 	      args))
-    (setf procedure-body body) ;WARNING: should handle the case that body is not a proper format?
+    (setf (procedure-body procedure) body) ;WARNING: should handle the case that body is not a proper format?
     (when procedure-new-created-p
       (setf (gethash name
 		     (slot-value procedure-pool 'procedures))
@@ -152,8 +157,8 @@
 	       (format file-output-stream ; TODO: reindent file
 		       "(~a ~a ~a ~%~a)~%~%)"
 		       procedure-name
-		       (or procedure-params ; WARNING: Do we have to check if it's a list?
+		       (or (procedure-params procedure); WARNING: Do we have to check if it's a list?
 			   "()")
-		       procedure-args
-		       procedure-body)))))
+		       (procedure-args procedure)
+		       (procedure-body procedure))))))
 			   

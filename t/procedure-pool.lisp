@@ -57,3 +57,25 @@
 		     empty-procedure-pool)))
   (finalize))
 
+
+(setf com.libgirl.smcl::*user-input-function*
+      (lambda () ()))
+
+;;; simple case
+(plan 3)
+(let* ((procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
+       (procedures (slot-value procedure-pool 'com.libgirl.smcl::procedures)))
+  (setf (gethash 'x procedures) (com.libgirl.smcl::make-procedure :body 'y)
+	(gethash 'y procedures) (com.libgirl.smcl::make-procedure :body 'z))
+  (let ((procedure-x (gethash 'x procedures)))
+    (is (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
+				    procedure-x
+				    procedure-pool)
+	'z)
+    (is (com.libgirl.smcl::procedure-body procedure-x)
+	'y)
+    (is (com.libgirl.smcl::procedure-body (gethash 'y procedures))
+	'z)))
+(finalize)
+
+(unintern 'procedure-pool)

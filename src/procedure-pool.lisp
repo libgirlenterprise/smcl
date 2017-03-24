@@ -107,28 +107,29 @@
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
   (let* ((procedure (gethash symbol
 			     (slot-value procedure-pool 'procedures))))
-    (when procedure
-      (let ((new-body (if (listp (procedure-body procedure))
-			  (copy-tree (procedure-body procedure))
-			  (list (procedure-body procedure)))))
-	(labels ((replace-params-by-args (params args body-list)
-		   (loop for sub-body in body-list
-			 collect (or (when params
-				       (some #'(lambda (param item arg)
-						 (when (eq param item)
-						   (if (atom arg)
-						       arg
-						       (copy-tree arg))))							 
-					     (mapcar #'list
-						     params
-						     (make-list *max-param-size* :initial-element sub-body)
-						     args)))
-				     (if (atom sub-body)
-					 sub-body
-					 (replace-params-by-args params args sub-body))))))
-	  (replace-params-by-args (procedure-params procedure)
-				  args
-				  new-body))))))
+    (if procedure ; WARNING: in current version, new-body shouldn't be nil when procedure = t. it could change in the future.
+	(let ((new-body (if (listp (procedure-body procedure))
+			    (copy-tree (procedure-body procedure))
+			    (list (procedure-body procedure)))))
+	  (labels ((replace-params-by-args (params args body-list)
+		     (loop for sub-body in body-list
+			   collect (or (when params
+					 (some #'(lambda (param item arg)
+						   (when (eq param item)
+						     (if (atom arg)
+							 arg
+							 (copy-tree arg))))							 
+					       (mapcar #'list
+						       params
+						       (make-list *max-param-size* :initial-element sub-body)
+						       args)))
+				       (if (atom sub-body)
+					   sub-body
+					   (replace-params-by-args params args sub-body))))))
+	    (replace-params-by-args (procedure-params procedure)
+				    args
+				    new-body)))
+	symbol)))
 
 (defmethod set-procedure (name params args body (procedure-pool procedure-pool))
   (let* ((procedure (gethash name ; TODO & WARNING: handle the case when name is not a symbol

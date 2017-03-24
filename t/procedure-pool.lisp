@@ -19,16 +19,16 @@
 					 "SET-PROCEDURE"
 					 "EXPORT-TO-FILE"))
 
+(defparameter subtest-number-list (list (+ 1 (* 2 (length *non-export-symbol-list*)))
+					4
+					6))
+
 (defun run-program-for-make-user-input-function (input-stream)
   (sb-ext:run-program "/usr/local/bin/sbcl"
 		      '("--noinform" "--load" "make-user-input-function.lisp")
 		      :output nil
 		      :input input-stream
 		      :wait nil))
-
-(defparameter subtest-number-list (list (+ 1 (* 2 (length *non-export-symbol-list*)))
-					4
-					6))
 
 (plan 3)
 

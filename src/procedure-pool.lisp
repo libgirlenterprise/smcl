@@ -49,44 +49,10 @@
 			   (if (atom (first body))
 			       (first body)
 			       'list-quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
-    (unless (find body-operator
-		  (procedure-params procedure)) ; it means body-operator not determined because it is a parameter. This case body is already perfect.
-      
 
-      ;; unless the operator is special-primitive-p, reduce arguments of this body
-      (unless (or (atom body)
-		  (= (length body) 1)
-		  (special-primitive-p body-operator))
-	(let ((perfect-form))
-	  (do* ((i 1 (incf i)))
-	       ((or (atom body) ; for the case body being rewriten
-		    (>= (- i 1) (length body)) ; for the same case of the last line
-		    (progn
-		      (when perfect-form
-			(setf (nth (- i 1) body)
-			      perfect-form))
-		      (>= i (length body)))))	  
-	    (setf perfect-form (reduce-f (nth i body)
-					 procedure
-					 procedure-pool)))))
-
-      ;; invoke sub-procedure
-      ;; and reduce body again until perfect form
-      ;; WARNING: doesn't clear about the case being rewriten
-      (let ((new-body (apply (if (primitivep body-operator)
-				 #'apply-primitive-f
-				 #'invoke-f)
-			     (append (list body-operator)
-				     (list (append (unless (atom body)						      
-						     (subseq body 1))
-						   (copy-tree (procedure-args procedure)))) ; WARNING: we might make it too long
-				     (when (primitivep body-operator)
-				       (list (copy-tree (procedure-args procedure))
-					     procedure))
-				     (list procedure-pool)))))
-	(when new-body
-	  (unless (equalp body new-body)
-	    (reduce-f new-body procedure procedure-pool)))))))
+    (if (find body-operator
+	      (procedure-params procedure)) ; it means body-operator not determined because it is a parameter. This case body is already perfect.
+	body
 	;; reduce sub-procedure before invoke
 	(progn
 	  (unless (primitivep body-operator)
@@ -97,6 +63,46 @@
 			  sub-procedure
 			  procedure-pool
 			  :set-procedure-new-body-p t))))
+
+	  ;; unless the operator is special-primitive-p, reduce arguments of this body
+	  (unless (or (atom body)
+		      (= (length body) 1)
+		      (special-primitive-p body-operator))
+	    (let ((perfect-form))
+	      (do* ((i 1 (incf i)))
+		   ((or (atom body) ; for the case body being rewriten
+			(>= (- i 1) (length body)) ; for the same case of the last line
+			(progn
+			  (and perfect-form
+			       (setf (nth (- i 1) body)
+				     perfect-form)
+			       (funcall *user-input-funcion*))
+			  (>= i (length body)))))  
+		(setf perfect-form (reduce-f (nth i body)
+					     procedure
+					     procedure-pool)))))
+
+	  ;; invoke sub-procedure
+	  ;; and reduce body again until perfect form
+	  ;; WARNING: doesn't clear about the case being rewriten
+	  (let ((new-body (apply (if (primitivep body-operator)
+				     #'apply-primitive-f
+				     #'invoke-f)
+				 (append (list body-operator)
+					 (list (append (unless (atom body)						      
+							 (subseq body 1))
+						       (copy-tree (procedure-args procedure)))) ; WARNING: we might make it too long
+					 (when (primitivep body-operator)
+					   (list (copy-tree (procedure-args procedure))
+						 procedure))
+					 (list procedure-pool)))))
+	    (let ((return-value (if (equalp body new-body)
+	    			    body
+	    			    (reduce-f new-body procedure procedure-pool))))
+	      (if set-procedure-new-body-p
+	    	  (setf (procedure-body procedure)
+	    		return-value)
+	    	  return-value)))))))
 
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
   (let* ((procedure (gethash symbol

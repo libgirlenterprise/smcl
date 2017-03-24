@@ -29,7 +29,7 @@
   ((procedures :type hash-table
 	       :initform (make-hash-table))))
 
-(defgeneric reduce-f (body procedure procedure-pool))
+(defgeneric reduce-f (body procedure procedure-pool &key set-procedure-new-body-p))
 
 (defgeneric invoke-f (symbol args procedure-pool)) ; should handle when symbol is not a symbol
       
@@ -50,8 +50,8 @@
       (apply #'set-procedure (append (copy-tree procedure-form)
 				     (list procedure-pool))))))
 
-(defmethod reduce-f (body procedure (procedure-pool procedure-pool))
-  "Set the object to which the body bound to its best reduced form (perfect form). Return the body object, but returning nil for no further reduction."
+(defmethod reduce-f (body procedure (procedure-pool procedure-pool) &key set-procedure-new-body-p)
+  "Reduce the body to its simpliest form (perfect form)."
   (let ((body-operator (if (atom body)
 			   body ; now the same as body unless recursion
 			   (if (atom (first body))
@@ -60,13 +60,6 @@
     (unless (find body-operator
 		  (procedure-params procedure)) ; it means body-operator not determined because it is a parameter. This case body is already perfect.
       
-      ;; reduce sub-procedure before invoke
-      (unless (primitivep body-operator)
-	(let ((sub-procedure (gethash body-operator
-				      (slot-value procedure-pool 'procedures))))
-	  (when sub-procedure
-	    (reduce-f (procedure-body sub-procedure)
-		    sub-procedure procedure-pool))))
 
       ;; unless the operator is special-primitive-p, reduce arguments of this body
       (unless (or (atom body)
@@ -103,6 +96,16 @@
 	(when new-body
 	  (unless (equalp body new-body)
 	    (reduce-f new-body procedure procedure-pool)))))))
+	;; reduce sub-procedure before invoke
+	(progn
+	  (unless (primitivep body-operator)
+	    (let ((sub-procedure (gethash body-operator
+					  (slot-value procedure-pool 'procedures))))
+	      (when sub-procedure
+		(reduce-f (procedure-body sub-procedure)
+			  sub-procedure
+			  procedure-pool
+			  :set-procedure-new-body-p t))))
 
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
   (let* ((procedure (gethash symbol

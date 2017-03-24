@@ -5,6 +5,9 @@
   (:use :cl :com.libgirl.smcl :prove))
 (in-package :com.libgirl.smcl-test.procedure-pool)
 
+(unless +nil-function+
+  (defconstant +nil-function+ (lambda () ())))
+
 (defparameter *non-export-symbol-list* '("*PARAM-SIZE*"
 					 "*ARG-SIZE*"
 					 "*USER-INPUT-FUNCTION*"
@@ -23,6 +26,9 @@
 (defparameter subtest-number-list (list (+ 1 (* 2 (length *non-export-symbol-list*)))
 					4
 					6))
+
+(setf com.libgirl.smcl::*user-input-function*
+      +nil-function+)
 
 (defun run-program-for-make-user-input-function (input-stream)
   (sb-ext:run-program "/usr/local/bin/sbcl"
@@ -61,9 +67,6 @@
 
 (subtest "simple case"
   (plan (third subtest-number-list))
-  (setf com.libgirl.smcl::*user-input-function*
-	(lambda () ()))
-
   (let* ((cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
 	 (cl-user::procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures)))
     (mapcar #'com.libgirl.smcl::set-procedure

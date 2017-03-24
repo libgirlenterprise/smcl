@@ -76,7 +76,7 @@
 			  (and perfect-form
 			       (setf (nth (- i 1) body)
 				     perfect-form)
-			       (funcall *user-input-funcion*))
+			       (funcall *user-input-function*))
 			  (>= i (length body)))))  
 		(setf perfect-form (reduce-f (nth i body)
 					     procedure

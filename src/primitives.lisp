@@ -1,19 +1,5 @@
 (in-package :com.libgirl.smcl)
 
-(defun primitivep (procedure-name)
-  (if (gethash procedure-name primitives)
-      t))
-
-(defun special-primitive-p (procedure-name)
-  (or (equal procedure-name 'when)
-      (equal procedure-name 'defun)))
-    
-(defun apply-primitive (primitive-name params default-args procedure procedure-pool)
-  (if (not (primitivep primitive-name))
-      (error "Apply Non-primitive Error")
-      (if (special-primitive-p primitive-name)
-	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
-	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
 
 (defparameter primitives nil)
 
@@ -93,3 +79,20 @@
 	  nil
 	  (list body))
       (append (find-unprimitive-symbol (car body)) (find-unprimitive-symbol (cdr body)))))  
+
+
+(defun primitivep (procedure-name)
+  (if (gethash procedure-name primitives)
+      t))
+
+(defun special-primitive-p (procedure-name)
+  (or (equal procedure-name 'when)
+      (equal procedure-name 'defun)))
+    
+(defun apply-primitive (primitive-name params default-args procedure procedure-pool)
+  (if (not (primitivep primitive-name))
+      (error "Apply Non-primitive Error")
+      (if (special-primitive-p primitive-name)
+	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
+	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
+

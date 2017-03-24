@@ -14,6 +14,7 @@
 					 "PROCEDURE-ARGS"
 					 "PROCEDURE-BODY"
 					 "PROCEDURE-POOL"
+					 "PROCEDURES"
 					 "REDUCE-F"
 					 "INVOKE-F"
 					 "SET-PROCEDURE"
@@ -47,10 +48,10 @@
 (subtest "null cases"
   (plan (second subtest-number-list))
   (let* ((empty-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
-	 (procedures (slot-value empty-procedure-pool 'com.libgirl.smcl::procedures)))
+	 (cl-user::procedures (slot-value empty-procedure-pool 'com.libgirl.smcl::procedures)))
     (is-type empty-procedure-pool 'com.libgirl.smcl::procedure-pool)
-    (is-type procedures 'hash-table)
-    (is (hash-table-count procedures) 0)
+    (is-type cl-user::procedures 'hash-table)
+    (is (hash-table-count cl-user::procedures) 0)
     (is (com.libgirl.smcl::reduce-f 'x
 				    (com.libgirl.smcl::make-procedure)
 				    empty-procedure-pool)
@@ -64,14 +65,14 @@
 	(lambda () ()))
 
   (let* ((cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
-	 (procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures)))
     (mapcar (lambda (procedure-name procedure-body-form)
 	      (setf (gethash procedure-name procedures)
 		    (com.libgirl.smcl::make-procedure :body procedure-body-form)))
+	 (cl-user::procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures)))
 	    (list 'x 'y 'z)
 	    (list 'y 'z 'v))
-    (let ((procedure-x (gethash 'x procedures)))
-      (is (gethash 'v procedures)
+    (let ((procedure-x (gethash 'x cl-user::procedures)))
+      (is (gethash 'v cl-user::procedures)
 	  nil)
       (is (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
 				      procedure-x
@@ -79,7 +80,7 @@
 	  'v)
       (is (com.libgirl.smcl::procedure-body procedure-x)
 	  'y)
-      (is (com.libgirl.smcl::procedure-body (gethash 'y procedures))
+      (is (com.libgirl.smcl::procedure-body (gethash 'y cl-user::procedures))
 	  'v)
       (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
 				  procedure-x
@@ -87,7 +88,7 @@
 				  :set-procedure-new-body-p t)
       (is (com.libgirl.smcl::procedure-body procedure-x)
 	  'v)
-      (is (gethash 'v procedures)
+      (is (gethash 'v cl-user::procedures)
 	  nil)))
   (finalize))
 

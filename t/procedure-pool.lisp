@@ -65,12 +65,14 @@
 	(lambda () ()))
 
   (let* ((cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
-    (mapcar (lambda (procedure-name procedure-body-form)
-	      (setf (gethash procedure-name procedures)
-		    (com.libgirl.smcl::make-procedure :body procedure-body-form)))
 	 (cl-user::procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures)))
+    (mapcar #'com.libgirl.smcl::set-procedure
 	    (list 'x 'y 'z)
-	    (list 'y 'z 'v))
+	    (list nil nil nil)
+	    (make-list 3
+		       :initial-element (make-list com.libgirl.smcl::*arg-size* :initial-element '0))
+	    (list 'y 'z 'v)
+	    (make-list 3 :initial-element cl-user::procedure-pool))
     (let ((procedure-x (gethash 'x cl-user::procedures)))
       (is (gethash 'v cl-user::procedures)
 	  nil)

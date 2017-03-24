@@ -26,56 +26,71 @@
 		      :input input-stream
 		      :wait nil))
 
-;;; test export or non-export of com.libgirl.smcl
-(plan (* 2 (length *non-export-symbol-list*)))
-(mapcar #'(lambda (symbol)
-	    (ok (not (find-symbol symbol)))
-	    (is-values (find-symbol symbol 'com.libgirl.smcl)
-		       (list (intern symbol 'com.libgirl.smcl)
-			     :internal)))
-	   *non-export-symbol-list*)
-(finalize)
+(defparameter subtest-number-list (list (+ 1 (* 2 (length *non-export-symbol-list*)))
+					4
+					6))
 
-(plan 1)
-(ok (find-symbol "SMCL-RUN"))
-(finalize)
-
-
-;;;null case
 (plan 3)
-(let* ((empty-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
-       (procedures (slot-value empty-procedure-pool 'com.libgirl.smcl::procedures)))
-  (is-type empty-procedure-pool 'com.libgirl.smcl::procedure-pool)
-  (is-type procedures 'hash-table)
-  (is (hash-table-count procedures) 0)
-  (finalize)
 
-  ;;test empty pool to start reduce-f
-  (plan 1)
-  (ok (not (com.libgirl.smcl::reduce-f 'x
-		     (com.libgirl.smcl::make-procedure)
-		     empty-procedure-pool)))
+(subtest "test export or non-export of com.libgirl.smcl"
+  (plan (first subtest-number-list))
+  (mapcar #'(lambda (symbol)
+	      (ok (not (find-symbol symbol)))
+	      (is-values (find-symbol symbol 'com.libgirl.smcl)
+			 (list (intern symbol 'com.libgirl.smcl)
+			       :internal)))
+	  *non-export-symbol-list*)
+  (ok (find-symbol "SMCL-RUN"))
   (finalize))
 
 
-(setf com.libgirl.smcl::*user-input-function*
-      (lambda () ()))
+(subtest "null cases"
+  (plan (second subtest-number-list))
+  (let* ((empty-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
+	 (procedures (slot-value empty-procedure-pool 'com.libgirl.smcl::procedures)))
+    (is-type empty-procedure-pool 'com.libgirl.smcl::procedure-pool)
+    (is-type procedures 'hash-table)
+    (is (hash-table-count procedures) 0)
+    (is (com.libgirl.smcl::reduce-f 'x
+				    (com.libgirl.smcl::make-procedure)
+				    empty-procedure-pool)
+	'x))
+  (finalize))
 
-;;; simple case
-(plan 3)
-(let* ((procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
-       (procedures (slot-value procedure-pool 'com.libgirl.smcl::procedures)))
-  (setf (gethash 'x procedures) (com.libgirl.smcl::make-procedure :body 'y)
-	(gethash 'y procedures) (com.libgirl.smcl::make-procedure :body 'z))
-  (let ((procedure-x (gethash 'x procedures)))
-    (is (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
-				    procedure-x
-				    procedure-pool)
-	'z)
-    (is (com.libgirl.smcl::procedure-body procedure-x)
-	'y)
-    (is (com.libgirl.smcl::procedure-body (gethash 'y procedures))
-	'z)))
+
+(subtest "simple case"
+  (plan (third subtest-number-list))
+  (setf com.libgirl.smcl::*user-input-function*
+	(lambda () ()))
+
+  (let* ((cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
+	 (procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures)))
+    (mapcar (lambda (procedure-name procedure-body-form)
+	      (setf (gethash procedure-name procedures)
+		    (com.libgirl.smcl::make-procedure :body procedure-body-form)))
+	    (list 'x 'y 'z)
+	    (list 'y 'z 'v))
+    (let ((procedure-x (gethash 'x procedures)))
+      (is (gethash 'v procedures)
+	  nil)
+      (is (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
+				      procedure-x
+				      cl-user::procedure-pool)
+	  'v)
+      (is (com.libgirl.smcl::procedure-body procedure-x)
+	  'y)
+      (is (com.libgirl.smcl::procedure-body (gethash 'y procedures))
+	  'v)
+      (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
+				  procedure-x
+				  cl-user::procedure-pool
+				  :set-procedure-new-body-p t)
+      (is (com.libgirl.smcl::procedure-body procedure-x)
+	  'v)
+      (is (gethash 'v procedures)
+	  nil)))
+  (finalize))
+
+
 (finalize)
 
-(unintern 'procedure-pool)

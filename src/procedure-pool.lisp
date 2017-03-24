@@ -83,7 +83,7 @@
 			  (and perfect-form
 			       (setf (nth (- i 1) body)
 				     perfect-form)
-			       (funcall *user-input-funcion*))
+			       (funcall *user-input-function*))
 			  (>= i (length body)))))  
 		(setf perfect-form (reduce-f (nth i body)
 					     procedure
@@ -148,10 +148,12 @@
     (setf (procedure-params procedure)
 	  params)
     (setf (procedure-args procedure)
-	  (or (reduce-f args
-			(make-procedure) ; use an isolated procedure 
-			(make-instance 'procedure-pool)) ; and an isolated procedure-pool to reduce args
-	      args))
+	  (mapcar (lambda (arg)
+		    (or (reduce-f arg
+				  (make-procedure) ; use an isolated procedure 
+				  (make-instance 'procedure-pool)) ; and an isolated procedure-pool to reduce args
+			arg))
+		  args))
     (setf (procedure-body procedure) body) ;WARNING: should handle the case that body is not a proper format?
     (when procedure-new-created-p
       (setf (gethash name

@@ -12,7 +12,8 @@
 (defparameter *simple-case-data* (list (list 'x 'y 'z)
 				       (make-list *simple-case-data-size*)
 				       (make-list *simple-case-data-size*
-						  :initial-element (make-list com.libgirl.smcl::*arg-size* :initial-element '0))
+						  :initial-element (make-list com.libgirl.smcl::*arg-size*
+									      :initial-element '0))
 				       (list 'y 'z 'v)))
 
 (defparameter *non-export-symbol-list* '("*PARAM-SIZE*"
@@ -44,7 +45,7 @@
 		      :input input-stream
 		      :wait nil))
 
-(plan 3)
+(plan (length *subtest-number-list*))
 
 (subtest "test export or non-export of com.libgirl.smcl"
   (plan (first *subtest-number-list*))

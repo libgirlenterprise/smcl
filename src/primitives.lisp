@@ -51,11 +51,12 @@
 	      ;; apply directly
 	      (apply-primitive name (list body default-arg-1) (list default-arg-1 default-arg-2) procedure procedure-pool)
 	      ;; re-defun
-	      ;; (let* ((procedure-ingredient-list (create-procedure-ingredient-list param-a default-arg-1 default-arg-2))
-	      ;; 	     (parameter-count (get-parameter-count procedure-ingredient-list)))
-	      ;; 	(if (= parameter-count 0)
-	      ;; 	    (
-	      ))))
+	      (let* ((procedure-ingredient-list (create-procedure-ingredient-list param-a default-arg-1 default-arg-2))
+	       	     (parameter-count (get-parameter-count procedure-ingredient-list)))
+	       ;	(if (= parameter-count 0)
+	       ;	    (
+		     
+	      )))))
 
 ;retun a cons list
 (defun create-procedure-ingredient-list (param-a default-arg-1 default-arg-2)
@@ -76,7 +77,10 @@
       ))
 
 (defun get-parameter-count (procedure-ingredient-list)
-  (count :none procedure-ingredient-list))
+  (case (count :none procedure-ingredient-list)
+    (0 2)
+    (1 1)
+    (2 0)))
 
 (defun find-unprimitive-symbol (body)
   (let ((body-list (if (atom body)
@@ -84,7 +88,6 @@
 		       body)))
     (labels ((adjoin-list (body-list)
 	       (iter (for item in body-list)
-		 (print item)
 		 (if (atom item)
 		     (if (not (primitivep item))
 			 (adjoining item))

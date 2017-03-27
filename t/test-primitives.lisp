@@ -61,9 +61,9 @@
   )
 
 (define-test test-get-parameter-count
-  (assert-equal 0 (com.libgirl.smcl::get-parameter-count (list 'a 'b 'c 'd 'arg2)))
+  (assert-equal 2 (com.libgirl.smcl::get-parameter-count (list 'a 'b 'c 'd 'arg2)))
   (assert-equal 1 (com.libgirl.smcl::get-parameter-count (list 'a 'b 'c :none 'arg2)))
-  (assert-equal 2 (com.libgirl.smcl::get-parameter-count (list 'a :none 'arg1 :none 'arg2))))
+  (assert-equal 0 (com.libgirl.smcl::get-parameter-count (list 'a :none 'arg1 :none 'arg2))))
 
 (define-test test-find-unprimitve-symbol
   (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol 'com.libgirl.smcl::list-quote))

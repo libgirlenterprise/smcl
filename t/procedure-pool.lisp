@@ -16,7 +16,7 @@
 									      :initial-element '0))
 				       (list 'y 'z 'v)))
 
-(defparameter *non-export-symbol-list* '("*PARAM-SIZE*"
+(defparameter *non-export-symbol-list* '("*MAX-PARAM-SIZE*"
 					 "*ARG-SIZE*"
 					 "*USER-INPUT-FUNCTION*"
 					 "MAKE-USER-INPUT-FUNCTION"

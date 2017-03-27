@@ -31,10 +31,11 @@
 					 "SET-PROCEDURE"
 					 "EXPORT-TO-FILE"))
 
-(defparameter *subtest-number-list* (list (+ 1 (* 2 (length *non-export-symbol-list*)))
+(defparameter *subtest-number-list* (list (+ 1 (* 3 (length *non-export-symbol-list*)))
 					  4
 					  6
-					  6))
+					  6
+					  5))
 
 (setf com.libgirl.smcl::*user-input-function*
       *nil-function*)
@@ -116,6 +117,31 @@
 							 (cons #'list
 							       *simple-case-data*))))
 
+(subtest "test normal case but without parameter"
+  (plan (fifth *subtest-number-list*))
+  (let ((procedure-name-list (list 'x 'y 'v 'z 'a))
+	(procedure-body-list (list (list 'y 'z)
+				   (list 'v 'u)
+				   'w
+				   (list 'a 'b)
+				   'c)))
+    (let* ((cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
+						   :init-procedures (mapcar #'list
+									    procedure-name-list
+									    (make-list 5)
+									    (make-list 5
+										       :initial-element (make-list com.libgirl.smcl::*arg-size*
+														   :initial-element '0))
+									    procedure-body-list)))
+	   (cl-user::procedures (slot-value cl-user::procedure-pool
+					    'com.libgirl.smcl::procedures)))
+      ;;after initialization, name-body corresponding should be still the same
+      (loop for i from 0 below (length procedure-name-list)
+	    do (is (com.libgirl.smcl::procedure-body (gethash (nth i procedure-name-list)
+							      cl-user::procedures))
+		   (nth i procedure-body-list)
+		   :test #'equalp))))
+  (finalize))
 
 (finalize)
 

@@ -32,8 +32,9 @@
 					 "EXPORT-TO-FILE"))
 
 (defparameter *subtest-number-list* (list (+ 1 (* 2 (length *non-export-symbol-list*)))
-					4
-					6))
+					  4
+					  6
+					  6))
 
 (setf com.libgirl.smcl::*user-input-function*
       *nil-function*)
@@ -73,15 +74,11 @@
   (finalize))
 
 
-(subtest "simple case"
-  (plan (third *subtest-number-list*))
-  (let* ((cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
-	 (cl-user::procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures)))
-    (apply #'mapcar
-	   (cons #'com.libgirl.smcl::set-procedure
-		 (append (copy-tree *simple-case-data*)
-			 (list (make-list *simple-case-data-size* :initial-element cl-user::procedure-pool)))))
-    (let ((procedure-x (gethash 'x cl-user::procedures)))
+(defun test-simple-case (subtest-name subtest-number cl-user::procedure-pool)
+  (subtest subtest-name
+    (plan subtest-number)
+    (let* ((cl-user::procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures))
+	   (procedure-x (gethash 'x cl-user::procedures)))
       (is (gethash 'v cl-user::procedures)
 	  nil)
       (is (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
@@ -99,8 +96,24 @@
       (is (com.libgirl.smcl::procedure-body procedure-x)
 	  'v)
       (is (gethash 'v cl-user::procedures)
-	  nil)))
-  (finalize))
+	  nil))
+    (finalize)))
+
+
+(let ((procedure-pool-1 (make-instance 'com.libgirl.smcl::procedure-pool)))
+  (apply #'mapcar
+	 (cons #'com.libgirl.smcl::set-procedure
+	       (append (copy-tree *simple-case-data*)
+		       (list (make-list *simple-case-data-size* :initial-element procedure-pool-1)))))
+  (test-simple-case "test simple case with set-procedure"
+		    (third *subtest-number-list*)
+		    procedure-pool-1))
+(test-simple-case "test simple case wiht initialze-instance method"
+		  (fourth *subtest-number-list*)
+		  (make-instance 'com.libgirl.smcl::procedure-pool
+				 :init-procedures (apply #'mapcar
+							 (cons #'list
+							       *simple-case-data*))))
 
 
 (finalize)

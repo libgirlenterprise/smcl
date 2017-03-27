@@ -52,9 +52,10 @@
   (plan (first *subtest-number-list*))
   (mapcar #'(lambda (symbol)
 	      (ok (not (find-symbol symbol)))
-	      (is-values (find-symbol symbol 'com.libgirl.smcl)
-			 (list (intern symbol 'com.libgirl.smcl)
-			       :internal)))
+	      (ok (find-symbol symbol 'com.libgirl.smcl))
+	      (is (second (multiple-value-list (find-symbol symbol
+							    'com.libgirl.smcl)))
+		  :internal))
 	  *non-export-symbol-list*)
   (ok (find-symbol "SMCL-RUN"))
   (finalize))

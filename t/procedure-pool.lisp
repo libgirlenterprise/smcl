@@ -5,8 +5,15 @@
   (:use :cl :com.libgirl.smcl :prove))
 (in-package :com.libgirl.smcl-test.procedure-pool)
 
-(unless +nil-function+
-  (defconstant +nil-function+ (lambda () ())))
+(defparameter *nil-function* (lambda () ())) ;TODO: make it a constant
+
+(defparameter *simple-case-data-size* 3)
+
+(defparameter *simple-case-data* (list (list 'x 'y 'z)
+				       (make-list *simple-case-data-size*)
+				       (make-list *simple-case-data-size*
+						  :initial-element (make-list com.libgirl.smcl::*arg-size* :initial-element '0))
+				       (list 'y 'z 'v)))
 
 (defparameter *non-export-symbol-list* '("*PARAM-SIZE*"
 					 "*ARG-SIZE*"
@@ -23,12 +30,12 @@
 					 "SET-PROCEDURE"
 					 "EXPORT-TO-FILE"))
 
-(defparameter subtest-number-list (list (+ 1 (* 2 (length *non-export-symbol-list*)))
+(defparameter *subtest-number-list* (list (+ 1 (* 2 (length *non-export-symbol-list*)))
 					4
 					6))
 
 (setf com.libgirl.smcl::*user-input-function*
-      +nil-function+)
+      *nil-function*)
 
 (defun run-program-for-make-user-input-function (input-stream)
   (sb-ext:run-program "/usr/local/bin/sbcl"
@@ -40,7 +47,7 @@
 (plan 3)
 
 (subtest "test export or non-export of com.libgirl.smcl"
-  (plan (first subtest-number-list))
+  (plan (first *subtest-number-list*))
   (mapcar #'(lambda (symbol)
 	      (ok (not (find-symbol symbol)))
 	      (is-values (find-symbol symbol 'com.libgirl.smcl)
@@ -52,7 +59,7 @@
 
 
 (subtest "null cases"
-  (plan (second subtest-number-list))
+  (plan (second *subtest-number-list*))
   (let* ((empty-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
 	 (cl-user::procedures (slot-value empty-procedure-pool 'com.libgirl.smcl::procedures)))
     (is-type empty-procedure-pool 'com.libgirl.smcl::procedure-pool)
@@ -66,16 +73,13 @@
 
 
 (subtest "simple case"
-  (plan (third subtest-number-list))
+  (plan (third *subtest-number-list*))
   (let* ((cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool))
 	 (cl-user::procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures)))
-    (mapcar #'com.libgirl.smcl::set-procedure
-	    (list 'x 'y 'z)
-	    (list nil nil nil)
-	    (make-list 3
-		       :initial-element (make-list com.libgirl.smcl::*arg-size* :initial-element '0))
-	    (list 'y 'z 'v)
-	    (make-list 3 :initial-element cl-user::procedure-pool))
+    (apply #'mapcar
+	   (cons #'com.libgirl.smcl::set-procedure
+		 (append (copy-tree *simple-case-data*)
+			 (list (make-list *simple-case-data-size* :initial-element cl-user::procedure-pool)))))
     (let ((procedure-x (gethash 'x cl-user::procedures)))
       (is (gethash 'v cl-user::procedures)
 	  nil)

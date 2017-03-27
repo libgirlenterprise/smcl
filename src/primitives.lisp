@@ -48,8 +48,13 @@
 			 param-a))
 	       (body param-y))
 	  (if (primitivep name)
+	      ;; apply directly
 	      (apply-primitive name (list body default-arg-1) (list default-arg-1 default-arg-2) procedure procedure-pool)
-	      (create-procedure-ingredient-list param-a default-arg-1 default-arg-2)
+	      ;; re-defun
+	      ;; (let* ((procedure-ingredient-list (create-procedure-ingredient-list param-a default-arg-1 default-arg-2))
+	      ;; 	     (parameter-count (get-parameter-count procedure-ingredient-list)))
+	      ;; 	(if (= parameter-count 0)
+	      ;; 	    (
 	      ))))
 
 ;retun a cons list
@@ -63,7 +68,7 @@
       (compose-list flated-a default-param-args))))
 
 ;;all result is a list
-;;Be careful second and third are not for the future
+;;Be careful second and third may not suitible for the future
 (defun flate-param (param)		
   (if (atom param)
       (list param)
@@ -74,11 +79,17 @@
   (count :none procedure-ingredient-list))
 
 (defun find-unprimitive-symbol (body)
-  (if (atom body)
-      (if (primitivep body)
-	  nil
-	  (list body))
-      (append (find-unprimitive-symbol (car body)) (find-unprimitive-symbol (cdr body)))))  
+  (let ((body-list (if (atom body)
+		       (list body)
+		       body)))
+    (labels ((adjoin-list (body-list)
+	       (iter (for item in body-list)
+		 (print item)
+		 (if (atom item)
+		     (if (not (primitivep item))
+			 (adjoining item))
+		     (unioning (adjoin-list item))))))
+      (adjoin-list body-list))))
 
 
 (defun primitivep (procedure-name)
@@ -95,4 +106,5 @@
       (if (special-primitive-p primitive-name)
 	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
 	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
+
 

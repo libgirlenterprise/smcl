@@ -14,9 +14,13 @@
 
 
 
+
 (defpackage test-script
   (:use :cl :iterate :lisp-unit :com.libgirl.smcl))
 (in-package :test-script)
+
 (setq *print-failures* t)
 (load "../t/test-primitives.lisp")
+
 (RUN-TESTS :ALL)
+

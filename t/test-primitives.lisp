@@ -46,12 +46,18 @@
   (assert-equal (list 'a 'b 'c 'd) (com.libgirl.smcl::flate-param *list-list-list*)))
  
 (define-test test-create-procedure-ingredient-list
-  (assert-equal (list 'a :none 'arg1 :none 'arg2) (com.libgirl.smcl::create-procedure-ingredient-list *symbol-a* 'arg1 'arg2))
-  (assert-equal (list 'a 'b 'arg1 :none 'arg2) (com.libgirl.smcl::create-procedure-ingredient-list *list-a-b* 'arg1 'arg2))
-  (assert-equal (list 'a 'b 'c :none 'arg2) (com.libgirl.smcl::create-procedure-ingredient-list *list-list-c* 'arg1 'arg2))
-  (assert-equal (list 'a 'b 'c :none 'arg2) (com.libgirl.smcl::create-procedure-ingredient-list *list-a-list* 'arg1 'arg2))
-  (assert-equal (list 'a 'b 'c 'd 'arg2) (com.libgirl.smcl::create-procedure-ingredient-list *list-list-list* 'arg1 'arg2))
-  (assert-equal (list 'a 'b 'c 'd 'e) (com.libgirl.smcl::create-procedure-ingredient-list *big-list* 'arg1 'arg2))
+   (assert-equal (list 'a :none 'arg1 :none 'arg2)
+   		 (com.libgirl.smcl::create-procedure-ingredient-list *symbol-a* 'arg1 'arg2))
+   (assert-equal (list 'a 'b 'arg1 :none 'arg2)
+   		(com.libgirl.smcl::create-procedure-ingredient-list *list-a-b* 'arg1 'arg2))
+   (assert-equal (list 'a 'b 'c :none 'arg2)
+   		(com.libgirl.smcl::create-procedure-ingredient-list *list-list-c* 'arg1 'arg2))
+   (assert-equal (list 'a 'b 'c :none 'arg2)
+   		(com.libgirl.smcl::create-procedure-ingredient-list *list-a-list* 'arg1 'arg2))
+   (assert-equal (list 'a 'b 'c 'd 'arg2)
+   		(com.libgirl.smcl::create-procedure-ingredient-list *list-list-list* 'arg1 'arg2))
+   (assert-equal (list 'a 'b 'c 'd 'e)
+    		(com.libgirl.smcl::create-procedure-ingredient-list *big-list* 'arg1 'arg2))
   )
 
 (define-test test-get-parameter-count
@@ -59,8 +65,32 @@
   (assert-equal 1 (com.libgirl.smcl::get-parameter-count (list 'a 'b 'c :none 'arg2)))
   (assert-equal 2 (com.libgirl.smcl::get-parameter-count (list 'a :none 'arg1 :none 'arg2))))
 
-;; (define-test test-find-unprimitve-symbol
-;;   (assert-equal nil (fin
+(define-test test-find-unprimitve-symbol
+  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol 'com.libgirl.smcl::list-quote))
+  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol 'com.libgirl.smcl::cons))
+  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol 'com.libgirl.smcl::car))
+  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol 'com.libgirl.smcl::cdr))
+  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol 'com.libgirl.smcl::eq))
+  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol 'com.libgirl.smcl::atom))
+  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol 'com.libgirl.smcl::true))
+  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol 'com.libgirl.smcl::none))
+  (assert-equal com.libgirl.smcl::(list 'a) (com.libgirl.smcl::find-unprimitive-symbol 'com.libgirl.smcl::a))
+  (assert-equal com.libgirl.smcl::(list 'a) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'a)))
+  (assert-equal nil  (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'cons 'car)))
+  (assert-equal com.libgirl.smcl::(list 'a) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote (list 'list-quote 'car 'cons) 'a)))
+  (assert-equal com.libgirl.smcl::(list 'a 'b) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote (list 'list-quote 'a 'cons) 'b)))
+  (assert-equal com.libgirl.smcl::(list 'a 'b) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote (list 'list-quote 'true 'a) 'b)))
+  (assert-equal com.libgirl.smcl::(list 'a 'b) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote (list 'list-quote 'a 'b) 'atom)))
+  (assert-equal com.libgirl.smcl::(list 'a 'b 'c) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote (list 'list-quote 'a 'b) 'c)))
+
+    (assert-equal com.libgirl.smcl::(list 'a) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'a (list 'list-quote 'car 'cons))))
+  (assert-equal com.libgirl.smcl::(list 'a 'b) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'a (list 'list-quote 'b 'cons))))
+  (assert-equal com.libgirl.smcl::(list 'a 'b) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'a (list 'list-quote 'true 'b))))
+  (assert-equal com.libgirl.smcl::(list 'a 'b) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'none (list 'list-quote 'a 'b))))
+  (assert-equal com.libgirl.smcl::(list 'a 'b 'c) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'a (list 'list-quote 'b 'c))))
+
+ 
+  )
 
 
 

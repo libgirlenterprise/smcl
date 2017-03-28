@@ -35,7 +35,7 @@
 					  4
 					  6
 					  6
-					  5))
+					  12))
 
 (setf com.libgirl.smcl::*user-input-function*
       *nil-function*)
@@ -117,6 +117,17 @@
 							 (cons #'list
 							       *simple-case-data*))))
 
+(defun test-multiple-name-body-pairs (procedure-name-list procedure-body-expected-list cl-user::procedures)
+  (mapcar (lambda (procedure-name procedure-body-expected)
+	    (is (let ((procedure-got (gethash procedure-name
+					      cl-user::procedures)))
+		  (when procedure-got
+		    (com.libgirl.smcl::procedure-body procedure-got)))
+		procedure-body-expected
+		:test #'equalp))
+	  procedure-name-list
+	  procedure-body-expected-list))
+
 (subtest "test normal case but without parameter"
   (plan (fifth *subtest-number-list*))
   (let ((procedure-name-list (list 'x 'y 'v 'z 'a))
@@ -134,13 +145,20 @@
 														   :initial-element '0))
 									    procedure-body-list)))
 	   (cl-user::procedures (slot-value cl-user::procedure-pool
-					    'com.libgirl.smcl::procedures)))
+					    'com.libgirl.smcl::procedures))
+	   (procedure-x (gethash 'x cl-user::procedures)))
       ;;after initialization, name-body corresponding should be still the same
-      (loop for i from 0 below (length procedure-name-list)
-	    do (is (com.libgirl.smcl::procedure-body (gethash (nth i procedure-name-list)
-							      cl-user::procedures))
-		   (nth i procedure-body-list)
-		   :test #'equalp))))
+      (test-multiple-name-body-pairs procedure-name-list
+				     procedure-body-list
+				     cl-user::procedures)
+      (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
+				  procedure-x
+				  cl-user::procedure-pool
+				  :set-procedure-new-body-p t)
+      (test-multiple-name-body-pairs (append procedure-name-list
+					     (list 'u 'b))
+				     (list 'w 'w 'w 'c 'c nil nil)
+				     cl-user::procedures)))
   (finalize))
 
 (finalize)

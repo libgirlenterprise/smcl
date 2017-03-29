@@ -3,7 +3,7 @@
 
 (in-package :cl-user)
 (defpackage com.libgirl.smcl
-  (:use :cl)
+  (:use :cl :iterate)
   (:export :smcl-run))
 
 (in-package :com.libgirl.smcl)

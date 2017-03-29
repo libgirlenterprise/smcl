@@ -122,10 +122,9 @@
 						     (if (atom arg)
 							 arg
 							 (copy-tree arg))))							 
-					       (mapcar #'list
-						       params
-						       (make-list *max-param-size* :initial-element sub-body)
-						       args)))
+					       params
+					       (make-list *max-param-size* :initial-element sub-body)
+					       args))
 				       (if (atom sub-body)
 					   sub-body
 					   (replace-params-by-args params args sub-body))))))

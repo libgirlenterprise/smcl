@@ -63,37 +63,32 @@
 			   (if (atom (first body))
 			       (first body)
 			       :list-quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
-    (if (find body-operator
-	      (procedure-params procedure)) ; it means body-operator not determined because it is a parameter. This case body is already perfect.
-	body
-	;; reduce sub-procedure before invoke
-	(progn
-	  (unless (primitivep body-operator)
-	    (let ((sub-procedure (get-procedure body-operator procedure-pool)))
-	      (when sub-procedure
-		(reduce-f (procedure-body sub-procedure)
-			  sub-procedure
-			  procedure-pool
-			  :set-procedure-new-body-p t))))
+    (progn
+      ;; reduce sub-procedure before invoke
+      (unless (primitivep body-operator)
+	(let ((sub-procedure (get-procedure body-operator procedure-pool)))
+	  (when sub-procedure
+	    (reduce-f (procedure-body sub-procedure)
+		      sub-procedure
+		      procedure-pool
+		      :set-procedure-new-body-p t))))
 
-	  ;; unless the operator is special-primitive-p, reduce arguments of this body
-	  (unless (or (atom body)
-		      (= (length body) 1)
-		      (special-primitive-p body-operator))
-	    (let ((perfect-form))
-	      (do* ((i 1 (incf i)))
-		   ((or (atom body) ; for the case body being rewriten
-			(>= (- i 1) (length body)) ; for the same case of the last line
-			(progn
-			  (and perfect-form
-			       (setf (nth (- i 1) body)
-				     perfect-form)
-			       (funcall *user-input-function*))
-			  (>= i (length body)))))  
-		(setf perfect-form (reduce-f (nth i body)
-					     procedure
-					     procedure-pool)))))
-
+      ;; unless the operator is special-primitive-p, reduce arguments of this body
+      (unless (or (atom body)
+		  (= (length body) 1)
+		  (special-primitive-p body-operator))
+	(do* ((i 1 (incf i)))
+	     ((or (atom body) ; for the case body being rewriten
+		  (>= i (length body))))
+	  (setf (nth i body)
+		(reduce-f (nth i body)
+			  procedure
+			  procedure-pool))
+	  (funcall *user-input-function*)))
+      
+      (if (find body-operator
+		(procedure-params procedure)) ; it means body-operator not determined because it is a parameter. This case body is already perfect
+	  body
 	  ;; invoke sub-procedure
 	  ;; and reduce body again until perfect form
 	  ;; WARNING: doesn't clear about the case being rewriten
@@ -131,10 +126,9 @@
 						     (if (atom arg)
 							 arg
 							 (copy-tree arg))))							 
-					       (mapcar #'list
-						       params
-						       (make-list *max-param-size* :initial-element sub-body)
-						       args)))
+					       params
+					       (make-list *max-param-size* :initial-element sub-body)
+					       args))
 				       (if (atom sub-body)
 					   sub-body
 					   (replace-params-by-args params args sub-body))))))

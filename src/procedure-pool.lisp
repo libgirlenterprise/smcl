@@ -32,10 +32,16 @@
 (defgeneric reduce-f (body procedure procedure-pool &key set-procedure-new-body-p))
 
 (defgeneric invoke-f (symbol args procedure-pool)) ; should handle when symbol is not a symbol
-      
+
 (defgeneric set-procedure (name params args body procedure-pool))
 
 (defgeneric export-to-file (file-pathname procedure-pool))
+
+(defgeneric get-procedure (name procedure-pool))
+
+(defmethod get-procedure (name (procedure-pool procedure-pool))
+  (gethash name
+	   (slot-value procedure-pool 'procedures)))
 
 (defmethod initialize-instance :after ((procedure-pool procedure-pool) &key init-procedures)
   (dolist (procedure-form init-procedures)
@@ -63,8 +69,7 @@
 	;; reduce sub-procedure before invoke
 	(progn
 	  (unless (primitivep body-operator)
-	    (let ((sub-procedure (gethash body-operator
-					  (slot-value procedure-pool 'procedures))))
+	    (let ((sub-procedure (get-procedure body-operator procedure-pool)))
 	      (when sub-procedure
 		(reduce-f (procedure-body sub-procedure)
 			  sub-procedure
@@ -112,8 +117,7 @@
 	    	  return-value)))))))
 
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
-  (let* ((procedure (gethash symbol
-			     (slot-value procedure-pool 'procedures))))
+  (let* ((procedure (get-procedure symbol procedure-pool)))
     (if procedure ; WARNING: in current version, new-body shouldn't be nil when procedure = t. it could change in the future.
 	(let ((new-body (if (listp (procedure-body procedure))
 			    (copy-tree (procedure-body procedure))
@@ -139,8 +143,7 @@
 	symbol)))
 
 (defmethod set-procedure (name params args body (procedure-pool procedure-pool))
-  (let* ((procedure (gethash name ; TODO & WARNING: handle the case when name is not a symbol
-			     (slot-value procedure-pool 'procedures)))
+  (let* ((procedure (get-procedure name procedure-pool)) ; TODO & WARNING: handle the case when name is not a symbol
 	 (procedure-new-created-p (null procedure))
 	 (procedure (or procedure
 			(make-procedure)))) 
@@ -164,13 +167,12 @@
 				      :directiion :output
 				      :if-exists :supersede)
     (loop for procedure-name being the hash-keys in (slot-value procedure-pool 'procedures)
-	  do (let ((procedure (gethash procedure-name
-				       (slot-value procedure-pool 'procedures))))
+	  do (let ((procedure (get-procedure procedure-name procedure-pool)))
 	       (format file-output-stream ; TODO: reindent file
 		       "(~a ~a ~a ~%~a)~%~%)"
 		       procedure-name
-		       (or (procedure-params procedure); WARNING: Do we have to check if it's a list?
+		       (or (procedure-params procedure); WARNING: Do we have to check if it's a list?e
 			   "()")
 		       (procedure-args procedure)
 		       (procedure-body procedure))))))
-			   
+

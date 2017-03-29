@@ -79,26 +79,29 @@
 (defun test-simple-case (subtest-name subtest-number cl-user::procedure-pool)
   (subtest subtest-name
     (plan subtest-number)
-    (let* ((cl-user::procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures))
-	   (procedure-x (gethash 'x cl-user::procedures)))
-      (is (gethash 'v cl-user::procedures)
-	  nil)
-      (is (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
-				      procedure-x
-				      cl-user::procedure-pool)
-	  'v)
-      (is (com.libgirl.smcl::procedure-body procedure-x)
-	  'y)
-      (is (com.libgirl.smcl::procedure-body (gethash 'y cl-user::procedures))
-	  'v)
-      (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
-				  procedure-x
-				  cl-user::procedure-pool
-				  :set-procedure-new-body-p t)
-      (is (com.libgirl.smcl::procedure-body procedure-x)
-	  'v)
-      (is (gethash 'v cl-user::procedures)
-	  nil))
+    (is (com.libgirl.smcl::get-procedure 'v cl-user::procedure-pool)
+	nil)
+    (is (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure 'x
+												       cl-user::procedure-pool))
+				    (com.libgirl.smcl::get-procedure 'x cl-user::procedure-pool)
+				    cl-user::procedure-pool)
+	'v)
+    (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure 'x
+									   cl-user::procedure-pool))
+	'y)
+    (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure 'y
+									   cl-user::procedure-pool))
+	'v)
+    (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure 'x
+												   cl-user::procedure-pool))
+				(com.libgirl.smcl::get-procedure 'x cl-user::procedure-pool)
+				cl-user::procedure-pool
+				:set-procedure-new-body-p t)
+    (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure 'x
+									   cl-user::procedure-pool))
+	'v)
+    (is (com.libgirl.smcl::get-procedure 'v cl-user::procedure-pool)
+	nil)
     (finalize)))
 
 
@@ -117,10 +120,10 @@
 							 (cons #'list
 							       *simple-case-data*))))
 
-(defun test-multiple-name-body-pairs (procedure-name-list procedure-body-expected-list cl-user::procedures)
+(defun test-multiple-name-body-pairs (procedure-name-list procedure-body-expected-list cl-user::procedure-pool)
   (mapcar (lambda (procedure-name procedure-body-expected)
-	    (is (let ((procedure-got (gethash procedure-name
-					      cl-user::procedures)))
+	    (is (let ((procedure-got (com.libgirl.smcl::get-procedure procedure-name
+						    cl-user::procedure-pool)))
 		  (when procedure-got
 		    (com.libgirl.smcl::procedure-body procedure-got)))
 		procedure-body-expected
@@ -144,13 +147,12 @@
 										       :initial-element (make-list com.libgirl.smcl::*arg-size*
 														   :initial-element '0))
 									    procedure-body-list)))
-	   (cl-user::procedures (slot-value cl-user::procedure-pool
-					    'com.libgirl.smcl::procedures))
-	   (procedure-x (gethash 'x cl-user::procedures)))
+	   (procedure-x (com.libgirl.smcl::get-procedure 'x
+							 cl-user::procedure-pool)))
       ;;after initialization, name-body corresponding should be still the same
       (test-multiple-name-body-pairs procedure-name-list
 				     procedure-body-list
-				     cl-user::procedures)
+				     cl-user::procedure-pool)
       (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
 				  procedure-x
 				  cl-user::procedure-pool
@@ -158,7 +160,7 @@
       (test-multiple-name-body-pairs (append procedure-name-list
 					     (list 'u 'b))
 				     (list 'w 'w 'w 'c 'c nil nil)
-				     cl-user::procedures)))
+				     cl-user::procedure-pool)))
   (finalize))
 
 (finalize)

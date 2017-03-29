@@ -1,1 +1,9 @@
 *.fasl
+unit-test.lisp
+*lisp-unit.lisp*
+*primitives.lisp*
+.*primitives.lisp*
+*primitives.lsp*
+*pre-script.lisp*
+*test-script.lisp*
+*script.lisp*

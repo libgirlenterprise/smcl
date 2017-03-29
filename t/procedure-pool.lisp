@@ -26,6 +26,7 @@
 					 "PROCEDURE-BODY"
 					 "PROCEDURE-POOL"
 					 "PROCEDURES"
+					 "GET-PROCEDURE"
 					 "REDUCE-F"
 					 "INVOKE-F"
 					 "SET-PROCEDURE"

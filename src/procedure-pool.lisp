@@ -62,7 +62,7 @@
 			   body ; now the same as body unless recursion
 			   (if (atom (first body))
 			       (first body)
-			       'list-quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
+			       :list-quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
     (if (find body-operator
 	      (procedure-params procedure)) ; it means body-operator not determined because it is a parameter. This case body is already perfect.
 	body

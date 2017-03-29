@@ -46,18 +46,22 @@
 			     (first (second param-a))
 			     (second param-a))
 			 param-a))
-	       (body param-y))
+	       (body param-y)
+	       )
 	  (if (primitivep name)
 	      ;; apply directly
 	      (apply-primitive name (list body default-arg-1) (list default-arg-1 default-arg-2) procedure procedure-pool)
 	      ;; re-defun
 	      (let* ((procedure-ingredient-list (create-procedure-ingredient-list param-a default-arg-1 default-arg-2))
-	       	     (parameter-count (get-parameter-count procedure-ingredient-list)))
-	       	;; (if (= parameter-count 0)
-		;;     ;;(set-procedure name 
-		    
-		;;     )
-		)))))
+	       	     (parameter-count (get-parameter-count procedure-ingredient-list))
+		     (unprimitive-symbol-list (find-unprimitive-symbol body))
+		     (unprimitive-symbol-count (length unprimitive-symbol-list))
+		     (params nil))
+		(if (or (= parameter-count 0) (= (length unprimitive-symbol-list) 0))
+		    (set-procedure name nil (list default-arg-1 default-arg-2) body procedure-pool) ;copy-list problem
+		    (let ((params (match-params-and-unprimitive-symbols procedure-ingredient-list unprimitive-symbol-list))
+			  (args (get-args procedure-ingredient-list)))
+		      (set-procedure name params args body procedure-pool))))))))
 
 ;retun a cons list
 (defun create-procedure-ingredient-list (param-a default-arg-1 default-arg-2)
@@ -95,14 +99,39 @@
 		     (unioning (adjoin-list item))))))
       (adjoin-list body-list))))
 
-(defun parse-name-to-number (name)
+
+
+(defun parse-symbol-to-number (symbol)
   (let ((sha1output (make-string-output-stream))
-	(aa (make-string-input-stream (symbol-name name))))
+	(aa (make-string-input-stream (symbol-name symbol))))
     (sb-ext:run-program "/usr/bin/openssl"
 			(list "sha1")
 			:INPUT aa
 			:output sha1output)
     (parse-integer (get-output-stream-string sha1output) :radix 16)))
+
+
+(defun match-params-and-unprimitive-symbols (procedure-ingredient-list unprimitive-symbol-list)
+  (cond ((equal :none (second procedure-ingredient-list))
+	 (error "second parameter in procedure-ingredient-list should not be :none"))
+	((= (length unprimitive-symbol-list) 0)
+	 (error "unprimitive-symbol-list should not be 0"))
+	(t (let ((params (append (list (second procedure-ingredient-list)) 
+				 (if (not (equal (fourth procedure-ingredient-list) :none))
+				     (list (fourth procedure-ingredient-list))))))
+	     (labels ((match-them (params unprimitive-symbol-list)
+			(if (and (car params) (car unprimitive-symbol-list)) 
+			    (cons (nth (mod (parse-symbol-to-number (car params)) (length unprimitive-symbol-list))
+				       unprimitive-symbol-list)
+				  (match-them (cdr params) (remove (nth (mod (parse-symbol-to-number (car params))
+									     (length unprimitive-symbol-list))
+									unprimitive-symbol-list)
+								   unprimitive-symbol-list)))
+			    nil)))
+	       (match-them params unprimitive-symbol-list))))))
+
+
+
 
 (defun primitivep (procedure-name)
   (if (gethash procedure-name primitives)

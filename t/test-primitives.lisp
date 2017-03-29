@@ -89,8 +89,23 @@
   (assert-equal com.libgirl.smcl::(list 'a 'b) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'none (list 'list-quote 'a 'b))))
   (assert-equal com.libgirl.smcl::(list 'a 'b 'c) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'a (list 'list-quote 'b 'c)))))
 
-(define-test test-parse-name-to-number
-  (assert-equal (com.libgirl.smcl::parse-name-to-number 'com.libgirl.smcl::list-quote)
-		(com.libgirl.smcl::parse-name-to-number 'com.libgirl.smcl::list-quote))
-  (assert-true (not (= (com.libgirl.smcl::parse-name-to-number 'com.libgirl.smcl::a)
-		       (com.libgirl.smcl::parse-name-to-number 'com.libgirl.smcl::b)))))
+(define-test test-parse-symbol-to-number
+  (assert-equal (com.libgirl.smcl::parse-symbol-to-number 'com.libgirl.smcl::list-quote)
+		(com.libgirl.smcl::parse-symbol-to-number 'com.libgirl.smcl::list-quote))
+  (assert-true (not (= (com.libgirl.smcl::parse-symbol-to-number 'com.libgirl.smcl::a)
+		       (com.libgirl.smcl::parse-symbol-to-number 'com.libgirl.smcl::b)))))
+
+(define-test test-match-params-and-unprimitive-symbol
+  (assert-equal (list 'a)
+		(com.libgirl.smcl::match-params-and-unprimitive-symbols (list 'name 'p1 'a1 :none 'a2) (list 'a)))
+  (assert-equal (list 'b)
+		(com.libgirl.smcl::match-params-and-unprimitive-symbols (list 'name 'p1 'a1 :none 'a2) (list 'a 'b)))
+  (assert-equal (list 'a)
+		(com.libgirl.smcl::match-params-and-unprimitive-symbols (list 'name 'p1 'a1 :none 'a2) (list 'a 'b 'c)))
+  (assert-equal (list 'a)
+		(com.libgirl.smcl::match-params-and-unprimitive-symbols (list 'name 'p1 'a1 'p2 'a2) (list 'a)))
+  (assert-equal (list 'b 'a)
+		(com.libgirl.smcl::match-params-and-unprimitive-symbols (list 'name 'p1 'a1 'p2 'a2) (list 'a 'b)))
+  (assert-equal (list 'a 'b)
+		(com.libgirl.smcl::match-params-and-unprimitive-symbols (list 'name 'p1 'a1 'p2 'a2) (list 'a 'b 'c)))
+  )

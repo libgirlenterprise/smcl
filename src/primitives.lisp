@@ -53,10 +53,11 @@
 	      ;; re-defun
 	      (let* ((procedure-ingredient-list (create-procedure-ingredient-list param-a default-arg-1 default-arg-2))
 	       	     (parameter-count (get-parameter-count procedure-ingredient-list)))
-	       ;	(if (= parameter-count 0)
-	       ;	    (
-		     
-	      )))))
+	       	;; (if (= parameter-count 0)
+		;;     ;;(set-procedure name 
+		    
+		;;     )
+		)))))
 
 ;retun a cons list
 (defun create-procedure-ingredient-list (param-a default-arg-1 default-arg-2)
@@ -94,6 +95,14 @@
 		     (unioning (adjoin-list item))))))
       (adjoin-list body-list))))
 
+(defun parse-name-to-number (name)
+  (let ((sha1output (make-string-output-stream))
+	(aa (make-string-input-stream (symbol-name name))))
+    (sb-ext:run-program "/usr/bin/openssl"
+			(list "sha1")
+			:INPUT aa
+			:output sha1output)
+    (parse-integer (get-output-stream-string sha1output) :radix 16)))
 
 (defun primitivep (procedure-name)
   (if (gethash procedure-name primitives)
@@ -109,5 +118,13 @@
       (if (special-primitive-p primitive-name)
 	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
 	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
+
+;; (let ((list-one (list 1 2 3 4)))
+;;   (let ((list-let-list list-one))
+;;     (delete 2 list-one)
+;;     (print list-one)
+;;     (print list-let-list)))
+
+
 
 

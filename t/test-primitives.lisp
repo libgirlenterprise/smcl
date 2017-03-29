@@ -87,14 +87,10 @@
   (assert-equal com.libgirl.smcl::(list 'a 'b) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'a (list 'list-quote 'b 'cons))))
   (assert-equal com.libgirl.smcl::(list 'a 'b) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'a (list 'list-quote 'true 'b))))
   (assert-equal com.libgirl.smcl::(list 'a 'b) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'none (list 'list-quote 'a 'b))))
-  (assert-equal com.libgirl.smcl::(list 'a 'b 'c) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'a (list 'list-quote 'b 'c))))
+  (assert-equal com.libgirl.smcl::(list 'a 'b 'c) (com.libgirl.smcl::find-unprimitive-symbol com.libgirl.smcl::(list 'list-quote 'a (list 'list-quote 'b 'c)))))
 
- 
-  )
-
-
-
-
-
-
-		     
+(define-test test-parse-name-to-number
+  (assert-equal (com.libgirl.smcl::parse-name-to-number 'com.libgirl.smcl::list-quote)
+		(com.libgirl.smcl::parse-name-to-number 'com.libgirl.smcl::list-quote))
+  (assert-true (not (= (com.libgirl.smcl::parse-name-to-number 'com.libgirl.smcl::a)
+		       (com.libgirl.smcl::parse-name-to-number 'com.libgirl.smcl::b)))))

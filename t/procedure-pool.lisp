@@ -163,5 +163,47 @@
 				     cl-user::procedure-pool)))
   (finalize))
 
+(subtest "test normal case with parameters"
+  (plan (sixth *subtest-number-list*))
+  (let* ((procedure-name-list (list 'x 'y 'z 'b 'a '0 'c))
+	 (procedure-param-list (list nil
+				     (list 'p1 'p2)
+				     (list 'p1 'p2)
+				     (list 'p1 'p2)
+				     (list 'p1)
+				     (list 'p1 'p2)
+				     nil))
+	 (procedure-arg-list (mapcar (lambda (raw-list)
+				       (append raw-list
+					       (make-list (- com.libgirl.smcl::*arg-size*
+							     (length raw-list))
+							  :initial-element '0)))
+				     (list (list 'x1 'x2)
+					   nil
+					   (list 'z1 'z2)
+					   (list 'b1 'b2)
+					   (list 'aa)
+					   nil
+					   nil)))
+	 (procedure-body-list (list (list 'y
+					  (list 'z 'y 'v)
+					  (list 'a
+						(list 'b 'c 'k)))
+				    (list 'p1 'p2 'k)
+				    (list 'p1
+					  (list 'b 'p2)
+					  'c)
+				    'p2
+				    'p1
+				    'p2
+				    'd))
+	 (cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
+						 :init-procedures (mapcar #'list
+									  procedure-name-list
+									  procedure-param-list
+									  procedure-arg-list
+									  procedure-body-list)))
+	 (cl-user::procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures)))
+    
 (finalize)
 

@@ -36,7 +36,8 @@
 					  4
 					  6
 					  6
-					  12))
+					  12
+					  7))
 
 (setf com.libgirl.smcl::*user-input-function*
       *nil-function*)

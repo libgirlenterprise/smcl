@@ -58,10 +58,13 @@
 		     (unprimitive-symbol-count (length unprimitive-symbol-list))
 		     (params nil))
 		(if (or (= parameter-count 0) (= (length unprimitive-symbol-list) 0))
-		    (set-procedure name nil (copy-tree (list default-arg-1 default-arg-2)) (copy-tree body) procedure-pool) 
-		    (let ((params (match-params-and-unprimitive-symbols procedure-ingredient-list unprimitive-symbol-list))
+		    (set-procedure name nil (copy-tree (list default-arg-1 default-arg-2)) (copy-tree body) procedure-pool)
+		    (let ((params (match-params-and-unprimitive-symbols procedure-ingredient-list
+									unprimitive-symbol-list))
 			  (args (list (third procedure-ingredient-list) (fifth procedure-ingredient-list))))
-		      (set-procedure name (copy-tree params) (copy-tree args) (copy-tree body) procedure-pool))))))))
+		      (set-procedure name (copy-tree params) (copy-tree args) (copy-tree body) procedure-pool)))
+		name)))))
+
 ;;retun a cons list
 (defun create-procedure-ingredient-list (param-a default-arg-1 default-arg-2)
   (let ((default-param-args (list :name :no-param default-arg-1 :no-param default-arg-2))

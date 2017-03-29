@@ -179,7 +179,7 @@
 				       (append raw-list
 					       (make-list (- com.libgirl.smcl::*arg-size*
 							     (length raw-list))
-							  :initial-element '0)))
+							  :initial-element :0)))
 				     (list (list :x1 :x2)
 					   nil
 					   (list :z1 :z2)

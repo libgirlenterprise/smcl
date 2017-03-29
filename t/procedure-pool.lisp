@@ -37,7 +37,7 @@
 					  6
 					  6
 					  12
-					  7))
+					  16))
 
 (setf com.libgirl.smcl::*user-input-function*
       *nil-function*)
@@ -207,7 +207,28 @@
 									  procedure-body-list))))
     (test-multiple-name-body-pairs procedure-name-list ; first test the status unchanged before reduction
 				   procedure-body-list
-				   cl-user::procedure-pool))
+				   cl-user::procedure-pool)
+    (is (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
+												       cl-user::procedure-pool))
+				    (com.libgirl.smcl::get-procedure :x
+						   cl-user::procedure-pool)
+				    cl-user::procedure-pool)
+	:x1)
+    (test-multiple-name-body-pairs procedure-name-list
+				   (let ((expected (copy-tree procedure-body-list)))
+				     (setf (first expected) (list :y :x1 :k)
+					   (third expected) (list :p1 :z1 :d))
+				     expected)
+				   cl-user::procedure-pool)
+    (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
+												   cl-user::procedure-pool))
+				(com.libgirl.smcl::get-procedure :x
+								 cl-user::procedure-pool)
+				cl-user::procedure-pool
+				:set-procedure-new-body-p t)
+    (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
+									   cl-user::procedure-pool))
+	:x1))
   (finalize))
     
 (finalize)

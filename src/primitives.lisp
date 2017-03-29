@@ -5,40 +5,40 @@
 
 (setf primitives (make-hash-table))
 ;;11 22 -> (LIST-QUOTE 11 22)
-(setf (gethash 'list-quote primitives)
+(setf (gethash :list-quote primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
-	(list 'list-quote param-x param-y)))
-(setf (gethash 'cons primitives)
+	(list :list-quote param-x param-y)))
+(setf (gethash :cons primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
-	(list 'list-quote param-x param-y)))
-;;('list-quote '11 '22) -> '11, that's just shaka wants
-(setf (gethash 'car primitives)
+	(list :list-quote param-x param-y)))
+;;(:list-quote '11 '22) -> '11, that's just shaka wants
+(setf (gethash :car primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
-	(list 'quote (if (listp param-x)
+	 (if (listp param-x)
 			 (second param-x)
-			 param-x))))
-(setf (gethash 'cdr primitives)
+			 param-x)))
+(setf (gethash :cdr primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2) 
-	(list 'quote (if (listp param-x)
+	 (if (listp param-x)
 			 (subseq param-x 1) ;not (cdr (second param-x))??
-			 'none))))
-(setf (gethash 'when primitives)
+			 :none)))
+(setf (gethash :when primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
-	(list 'list-quote (if (reduce-f param-x procedure procedure-pool) ;Is 'list-quote necessary here? No
+	(list :list-quote (if (reduce-f param-x procedure procedure-pool) ;Is :list-quote necessary here? No
 			      (reduce-f param-y procedure procedure-pool)))))
-(setf (gethash 'eq primitives)
+(setf (gethash :eq primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	(if (equal param-x param-y)
-	    'true
-	    'none)))
-(setf (gethash 'atom primitives)
+	    :true
+	    :none)))
+(setf (gethash :atom primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	(if (not (listp param-x))
-	    'true
-	    'none)))
-(setf (gethash 'true primitives) 'true)
-(setf (gethash 'none primitives) 'none)
-(setf (gethash 'defun primitives)
+	    :true
+	    :none)))
+(setf (gethash :true primitives) :true)
+(setf (gethash :none primitives) :none)
+(setf (gethash :defun primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
 	(let* ((param-a (reduce-f param-x procedure procedure-pool))
 	       (name (if (listp param-a)
@@ -58,14 +58,13 @@
 		     (unprimitive-symbol-count (length unprimitive-symbol-list))
 		     (params nil))
 		(if (or (= parameter-count 0) (= (length unprimitive-symbol-list) 0))
-		    (set-procedure name nil (copy-tree (list default-arg-1 default-arg-2)) (copy-tree body) procedure-pool) ;copy-list problem param arg body 
+		    (set-procedure name nil (copy-tree (list default-arg-1 default-arg-2)) (copy-tree body) procedure-pool) 
 		    (let ((params (match-params-and-unprimitive-symbols procedure-ingredient-list unprimitive-symbol-list))
-			  (args (list (third procedure-ingredient-list) (fifth procedure-ingredient-list))
+			  (args (list (third procedure-ingredient-list) (fifth procedure-ingredient-list))))
 		      (set-procedure name (copy-tree params) (copy-tree args) (copy-tree body) procedure-pool))))))))
-
-;retun a cons list
+;;retun a cons list
 (defun create-procedure-ingredient-list (param-a default-arg-1 default-arg-2)
-  (let ((default-param-args (list :name :none default-arg-1 :none default-arg-2))
+  (let ((default-param-args (list :name :no-param default-arg-1 :no-param default-arg-2))
 	(flated-a (flate-param param-a)))
     (labels ((compose-list (flated-a param-args)
 	       (if (and flated-a param-args)
@@ -73,16 +72,16 @@
 		   param-args)))
       (compose-list flated-a default-param-args))))
 
+
 ;;all result is a list
 ;;Be careful second and third may not suitible for the future
 (defun flate-param (param)		
   (if (atom param)
       (list param)
-      (append (flate-param (second param)) (flate-param (third param)))
-      ))
+      (append (flate-param (second param)) (flate-param (third param)))))
 
 (defun get-parameter-count (procedure-ingredient-list)
-  (case (count :none procedure-ingredient-list)
+  (case (count :no-param  procedure-ingredient-list)
     (0 2)
     (1 1)
     (2 0)))
@@ -112,12 +111,12 @@
 
 
 (defun match-params-and-unprimitive-symbols (procedure-ingredient-list unprimitive-symbol-list)
-  (cond ((equal :none (second procedure-ingredient-list))
+  (cond ((equal :no-param (second procedure-ingredient-list))
 	 (error "second parameter in procedure-ingredient-list should not be :none"))
 	((= (length unprimitive-symbol-list) 0)
 	 (error "unprimitive-symbol-list should not be 0"))
 	(t (let ((params (append (list (second procedure-ingredient-list)) 
-				 (if (not (equal (fourth procedure-ingredient-list) :none))
+				 (if (not (equal (fourth procedure-ingredient-list) :no-param))
 				     (list (fourth procedure-ingredient-list))))))
 	     (labels ((match-them (params unprimitive-symbol-list)
 			(if (and (car params) (car unprimitive-symbol-list)) 
@@ -138,8 +137,8 @@
       t))
 
 (defun special-primitive-p (procedure-name)
-  (or (equal procedure-name 'when)
-      (equal procedure-name 'defun)))
+  (or (equal procedure-name :when)
+      (equal procedure-name :defun)))
     
 (defun apply-primitive (primitive-name params default-args procedure procedure-pool)
   (if (not (primitivep primitive-name))

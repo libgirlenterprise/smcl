@@ -203,8 +203,11 @@
 									  procedure-name-list
 									  procedure-param-list
 									  procedure-arg-list
-									  procedure-body-list)))
-	 (cl-user::procedures (slot-value cl-user::procedure-pool 'com.libgirl.smcl::procedures)))
+									  procedure-body-list))))
+    (test-multiple-name-body-pairs procedure-name-list ; first test the status unchanged before reduction
+				   procedure-body-list
+				   cl-user::procedure-pool))
+  (finalize))
     
 (finalize)
 

@@ -9,7 +9,7 @@
 
 (diag "smcl-test initialization")
 (plan nil)
-(defparameter *test-export-to-file-filepath* #P"~/test-export-to-file-filepath.lisp")
+(defvar *test-export-to-file-filepath*)
 
 (finalize)
 

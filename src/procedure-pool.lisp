@@ -96,9 +96,11 @@
 				     #'apply-primitive-f
 				     #'invoke-f)
 				 (append (list body-operator)
-					 (list (append (unless (atom body)						      
-							 (subseq body 1))
-						       (copy-tree (procedure-args procedure)))) ; WARNING: we might make it too long
+					 (list (subseq (append (unless (atom body)						      
+								 (subseq body 1))
+							       (copy-tree (procedure-args procedure)))
+						       0
+						       *max-param-size*)) ; TODO: max-param-size should assert smaller than arg-size
 					 (when (primitivep body-operator)
 					   (list (copy-tree (procedure-args procedure))
 						 procedure))

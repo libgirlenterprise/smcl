@@ -7,3 +7,4 @@ unit-test.lisp
 *pre-script.lisp*
 *test-script.lisp*
 *script.lisp*
+t/smcl-test-config.lisp

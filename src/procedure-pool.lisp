@@ -157,16 +157,18 @@
 	    procedure))))
 
 (defmethod export-to-file (file-pathname (procedure-pool procedure-pool))
-  (with-open-file (file-output-stream (make-pathname file-pathname)
-				      :directiion :output
+  (with-open-file (file-output-stream (pathname file-pathname)
+				      :direction :output
 				      :if-exists :supersede)
     (loop for procedure-name being the hash-keys in (slot-value procedure-pool 'procedures)
 	  do (let ((procedure (get-procedure procedure-name procedure-pool)))
 	       (format file-output-stream ; TODO: reindent file
-		       "(~a ~a ~a ~%~a)~%~%)"
-		       procedure-name
-		       (or (procedure-params procedure); WARNING: Do we have to check if it's a list?e
-			   "()")
-		       (procedure-args procedure)
-		       (procedure-body procedure))))))
+		       "~(~a~)" ; convert to lowercase
+		       (format nil
+			       "(~a ~a ~a ~%~a)~%~%"
+			       procedure-name
+			       (or (procedure-params procedure); WARNING: Do we have to check if it's a list?e
+				   "()")
+			       (procedure-args procedure)
+			       (procedure-body procedure)))))))
 

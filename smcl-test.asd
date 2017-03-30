@@ -12,6 +12,7 @@
 		:serial t
 		:components ((:test-file "smcl-test-init")
 			     (:test-file "smcl-test-config")
-			     (:test-file "procedure-pool"))))
+			     (:test-file "procedure-pool")
+			     (:test-file "smcl"))))
   :perform (test-op :after (op c)
                     (funcall (intern #.(string :run) :prove) c)))

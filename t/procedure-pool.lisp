@@ -1,8 +1,8 @@
 (in-package :cl-user)
-(ql:quickload "smcl")
 
 (defpackage com.libgirl.smcl-test.procedure-pool
-  (:use :cl :com.libgirl.smcl :prove))
+  (:use :cl :com.libgirl.smcl :prove :com.libgirl.smcl-test)
+  (:import-from :com.libgirl.smcl-test :*test-export-to-file-filepath*))
 (in-package :com.libgirl.smcl-test.procedure-pool)
 
 (defparameter *nil-function* (lambda () ())) ;TODO: make it a constant

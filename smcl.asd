@@ -11,5 +11,6 @@
 		:serial t
 		:components ((:file "procedure-pool")
 			     (:file "primitives")
-			     (:file "smcl")))))
+			     (:file "smcl"))))
+  :in-order-to ((test-op (test-op smcl-test))))
 		

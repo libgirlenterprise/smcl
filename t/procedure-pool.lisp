@@ -165,55 +165,58 @@
 				     cl-user::procedure-pool)))
   (finalize))
 
-(subtest "test normal case with parameters"
-  (plan (sixth *subtest-number-list*))
-  (let* ((procedure-name-list (list :x :y :z :b :a :0 :c))
-	 (procedure-param-list (list nil
-				     (list :p1 :p2)
-				     (list :p1 :p2)
-				     (list :p1 :p2)
-				     (list :p1)
-				     (list :p1 :p2)
-				     nil))
-	 (procedure-arg-list (mapcar (lambda (raw-list)
-				       (append raw-list
-					       (make-list (- com.libgirl.smcl::*arg-size*
-							     (length raw-list))
-							  :initial-element :0)))
-				     (list (list :x1 :x2)
-					   nil
-					   (list :z1 :z2)
-					   (list :b1 :b2)
-					   (list :aa)
-					   nil
-					   nil)))
-	 (procedure-body-list (list (list :y
-					  (list :z :y :v)
-					  (list :a
-						(list :b :c :k)))
-				    (list :p1 :p2 :k)
-				    (list :p1
-					  (list :b :p2)
-					  :c)
-				    :p2
-				    :p1
-				    :p2
-				    :d))
-	 (cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
-						 :init-procedures (mapcar #'list
-									  procedure-name-list
-									  procedure-param-list
-									  procedure-arg-list
-									  procedure-body-list))))
+
+(let* ((procedure-name-list (list :x :y :z :b :a :0 :c))
+       (procedure-param-list (list nil
+				   (list :p1 :p2)
+				   (list :p1 :p2)
+				   (list :p1 :p2)
+				   (list :p1)
+				   (list :p1 :p2)
+				   nil))
+       (procedure-arg-list (mapcar (lambda (raw-list)
+				     (append raw-list
+					     (make-list (- com.libgirl.smcl::*arg-size*
+							   (length raw-list))
+							:initial-element :0)))
+				   (list (list :x1 :x2)
+					 nil
+					 (list :z1 :z2)
+					 (list :b1 :b2)
+					 (list :aa)
+					 nil
+					 nil)))
+       (procedure-body-list (list (list :y
+					(list :z :y :v)
+					(list :a
+					      (list :b :c :k)))
+				  (list :p1 :p2 :k)
+				  (list :p1
+					(list :b :p2)
+					:c)
+				  :p2
+				  :p1
+				  :p2
+				  :d))
+       (cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
+					       :init-procedures (mapcar #'list
+									procedure-name-list
+									procedure-param-list
+									procedure-arg-list
+									procedure-body-list))))
+  
+  (subtest "test normal case with parameters"
+    (plan (sixth *subtest-number-list*))
     (test-multiple-name-body-pairs procedure-name-list ; first test the status unchanged before reduction
 				   procedure-body-list
 				   cl-user::procedure-pool)
     (is (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
 												       cl-user::procedure-pool))
 				    (com.libgirl.smcl::get-procedure :x
-						   cl-user::procedure-pool)
+								     cl-user::procedure-pool)
 				    cl-user::procedure-pool)
 	:x1)
+
     (test-multiple-name-body-pairs procedure-name-list
 				   (let ((expected (copy-tree procedure-body-list)))
 				     (setf (first expected) (list :y :x1 :k)
@@ -228,8 +231,16 @@
 				:set-procedure-new-body-p t)
     (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
 									   cl-user::procedure-pool))
-	:x1))
-  (finalize))
+	:x1)
+    (finalize)))
+
+  ;(subtest "test export-to-file"
+					;(plan (seventh *subtest-number-list*))
+  ;; (com.libgirl.smcl::export-to-file (format nil
+  ;; 					    "~a"
+  ;; 					    (read))
+  ;; 				    cl-user::procedure-pool))
+   ; (finalize)))
     
 (finalize)
 

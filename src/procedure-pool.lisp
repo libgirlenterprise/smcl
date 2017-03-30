@@ -157,8 +157,8 @@
 	    procedure))))
 
 (defmethod export-to-file (file-pathname (procedure-pool procedure-pool))
-  (with-open-file (file-output-stream (make-pathname file-pathname)
-				      :directiion :output
+  (with-open-file (file-output-stream (pathname file-pathname)
+				      :direction :output
 				      :if-exists :supersede)
     (loop for procedure-name being the hash-keys in (slot-value procedure-pool 'procedures)
 	  do (let ((procedure (get-procedure procedure-name procedure-pool)))

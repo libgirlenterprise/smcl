@@ -50,7 +50,7 @@
 	       )
 	  (if (primitivep name)
 	      ;; apply directly
-	      (apply-primitive name (list body default-arg-1) (list default-arg-1 default-arg-2) procedure procedure-pool)
+	      (apply-primitive-f name (list body default-arg-1) (list default-arg-1 default-arg-2) procedure procedure-pool)
 	      ;; re-defun
 	      (let* ((procedure-ingredient-list (create-procedure-ingredient-list param-a default-arg-1 default-arg-2))
 	       	     (parameter-count (get-parameter-count procedure-ingredient-list))
@@ -139,11 +139,12 @@
   (if (gethash procedure-name primitives)
       t))
 
+
 (defun special-primitive-p (procedure-name)
   (or (equal procedure-name :when)
       (equal procedure-name :defun)))
     
-(defun apply-primitive (primitive-name params default-args procedure procedure-pool)
+(defun apply-primitive-f (primitive-name params default-args procedure procedure-pool)
   (if (not (primitivep primitive-name))
       (error "Apply Non-primitive Error")
       (if (special-primitive-p primitive-name)
@@ -155,6 +156,7 @@
 ;;     (delete 2 list-one)
 ;;     (print list-one)
 ;;     (print list-let-list)))
+
 
 
 

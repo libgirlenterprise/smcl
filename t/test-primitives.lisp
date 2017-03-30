@@ -16,36 +16,17 @@
 				     (list :list-quote :a :b)
 				     :c)
 			       (list :list-quote :d :e)))
+
 (defparameter *test-procedure-pool*
-  (let* ((procedure-name-list (list :test-list-quote :y :z :b :a :0 :c)) 
-	 (procedure-param-list (list (list :p1 :p2)
-				     (list :p1 :p2)
-				     (list :p1 :p2)
-				     (list :p1 :p2)
-				     (list :p1)
-				     (list :p1 :p2)
-				     nil))
+  (let* ((procedure-name-list (list :test-list-quote)) 
+	 (procedure-param-list (list (list :p1 :p2)))
 	 (procedure-arg-list (mapcar (lambda (raw-list)
 				       (append raw-list
 					       (make-list (- com.libgirl.smcl::*arg-size*
 							     (length raw-list))
 							  :initial-element :0)))
-				     (list (list :a1 :a2)
-					   nil
-					   (list :a1 :a2)
-					   (list :b1 :b2)
-					   (list :aa)
-					   nil
-					   nil)))
-	 (procedure-body-list (list (list :list-quote :xx :yy)
-				    (list :p1 :p2 :k)
-				    (list :p1
-					  (list :b :p2)
-					  :c)
-				    :p2
-				    :p1
-				    :p2
-				    :d))
+				     (list (list :a1 :a2))))
+	 (procedure-body-list (list (list :list-quote :xx :yy)))
 	 (cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
 						 :init-procedures (mapcar #'list
 									  procedure-name-list
@@ -159,17 +140,17 @@
 ;;(com.libgirl.smcl::reduce-f :list-quote (get-proc :test-list-quote) *test-procedure-pool*)
 
 
-(print (com.libgirl.smcl::apply-primitive-f :list-quote
- 				     (list :a1 :a2)
- 				     (com.libgirl.smcl::procedure-args (get-proc :test-list-quote))
-				     (get-proc :test-list-quote)
-				     *test-procedure-pool*))
+;; (print (com.libgirl.smcl::apply-primitive-f :list-quote
+;;  				     (list :aa1 :aa2)
+;;  				     (com.libgirl.smcl::procedure-args (get-proc :test-list-quote))
+;; 				     (get-proc :test-list-quote)
+;; 				     *test-procedure-pool*))
 
-;; (define-test test-reduce-f-primitives
-;;   (assert-equal (get-proc :a) (com.libgirl.smcl::get-procedure :a
-;; 							       *test-procedure-pool*))
-;;   (assert-equal :list-quote (com.libgirl.smcl::reduce-f :list-quote (get-proc :test-list-quote) *test-procedure-pool*))
-;;   )
+(define-test test-reduce-f-primitives
+  (assert-equal (get-proc :list-quote) (com.libgirl.smcl::get-procedure :list-quote
+							       *test-procedure-pool*))
+  (assert-equal :list-quote (com.libgirl.smcl::reduce-f :list-quote (get-proc :test-list-quote) *test-procedure-pool*))
+  )
 
 
 

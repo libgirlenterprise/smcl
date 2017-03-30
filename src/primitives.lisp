@@ -7,7 +7,7 @@
 ;;11 22 -> (LIST-QUOTE 11 22)
 (setf (gethash :list-quote primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
-	(list :list-quote param-x param-y)))
+	(cons :list-quote (cons param-x param-y))))
 (setf (gethash :cons primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	(list :list-quote param-x param-y)))

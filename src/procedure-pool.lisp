@@ -8,8 +8,6 @@
 
 (in-package :com.libgirl.smcl)
 
-(defparameter *max-param-size* 2)
-
 (defparameter *arg-size* 2)
 
 (defvar *user-input-function*)
@@ -100,7 +98,7 @@
 								 (subseq body 1))
 							       (copy-tree (procedure-args procedure)))
 						       0
-						       *max-param-size*)) ; TODO: max-param-size should assert smaller than arg-size
+						       *arg-size*))
 					 (when (primitivep body-operator)
 					   (list (copy-tree (procedure-args procedure))
 						 procedure))
@@ -128,7 +126,7 @@
 							 arg
 							 (copy-tree arg))))							 
 					       params
-					       (make-list *max-param-size* :initial-element sub-body)
+					       (make-list *arg-size* :initial-element sub-body)
 					       args))
 				       (if (atom sub-body)
 					   sub-body

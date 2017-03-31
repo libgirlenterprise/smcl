@@ -16,8 +16,7 @@
 									      :initial-element '0))
 				       (list :y :z :v)))
 
-(defparameter *non-export-symbol-list* '("*MAX-PARAM-SIZE*"
-					 "*ARG-SIZE*"
+(defparameter *non-export-symbol-list* '("*ARG-SIZE*"
 					 "*USER-INPUT-FUNCTION*"
 					 "MAKE-USER-INPUT-FUNCTION"
 					 "PROCEDURE"
@@ -37,7 +36,8 @@
 					  6
 					  6
 					  12
-					  16))
+					  16
+					  1))
 
 (setf com.libgirl.smcl::*user-input-function*
       *nil-function*)
@@ -94,11 +94,7 @@
     (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :y
 									   cl-user::procedure-pool))
 	:v)
-    (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
-												   cl-user::procedure-pool))
-				(com.libgirl.smcl::get-procedure :x cl-user::procedure-pool)
-				cl-user::procedure-pool
-				:set-procedure-new-body-p t)
+    (com.libgirl.smcl::reduce-f :x cl-user::procedure-pool)
     (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
 									   cl-user::procedure-pool))
 	:v)
@@ -148,17 +144,12 @@
 									    (make-list 5
 										       :initial-element (make-list com.libgirl.smcl::*arg-size*
 														   :initial-element '0))
-									    procedure-body-list)))
-	   (procedure-x (com.libgirl.smcl::get-procedure :x
-							 cl-user::procedure-pool)))
+									    procedure-body-list))))
       ;;after initialization, name-body corresponding should be still the same
       (test-multiple-name-body-pairs procedure-name-list
 				     procedure-body-list
 				     cl-user::procedure-pool)
-      (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
-				  procedure-x
-				  cl-user::procedure-pool
-				  :set-procedure-new-body-p t)
+      (com.libgirl.smcl::reduce-f :x cl-user::procedure-pool)
       (test-multiple-name-body-pairs (append procedure-name-list
 					     (list :u :b))
 				     (list :w :w :w :c :c nil nil)
@@ -223,24 +214,24 @@
 					   (third expected) (list :p1 :z1 :d))
 				     expected)
 				   cl-user::procedure-pool)
-    (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
-												   cl-user::procedure-pool))
-				(com.libgirl.smcl::get-procedure :x
-								 cl-user::procedure-pool)
-				cl-user::procedure-pool
-				:set-procedure-new-body-p t)
+    (com.libgirl.smcl::reduce-f :x cl-user::procedure-pool)
     (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
 									   cl-user::procedure-pool))
 	:x1)
-    (finalize)))
+    (finalize))
 
-  ;(subtest "test export-to-file"
-					;(plan (seventh *subtest-number-list*))
-  ;; (com.libgirl.smcl::export-to-file (format nil
-  ;; 					    "~a"
-  ;; 					    (read))
-  ;; 				    cl-user::procedure-pool))
-   ; (finalize)))
+  (subtest "test export-to-file"
+    (plan (seventh *subtest-number-list*))
+    (if *test-export-to-file-filepath*
+	(progn
+	  (com.libgirl.smcl::export-to-file *test-export-to-file-filepath*
+					    cl-user::procedure-pool)
+	  (pass "file exported"))
+	(fail (format nil
+		      "~a~%~a"
+		      "please set *test-export-to-file-filepath* in t/smcl-test-config.lisp ."
+		      "use t/smcl-test-config.sample.lisp to create your own t/smcl-test-config.lisp")))
+    (finalize)))
     
 (finalize)
 

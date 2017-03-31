@@ -8,8 +8,6 @@
 
 (in-package :com.libgirl.smcl)
 
-(defparameter *max-param-size* 2)
-
 (defparameter *arg-size* 2)
 
 (defvar *user-input-function*)
@@ -29,7 +27,7 @@
   ((procedures :type hash-table
 	       :initform (make-hash-table))))
 
-(defgeneric reduce-f (body procedure procedure-pool &key set-procedure-new-body-p))
+(defgeneric reduce-f (body procedure-or-procedure-pool &optional procedure-pool-or-unused))
 
 (defgeneric invoke-f (symbol args procedure-pool)) ; should handle when symbol is not a symbol
 
@@ -56,22 +54,31 @@
       (apply #'set-procedure (append (copy-tree procedure-form)
 				     (list procedure-pool))))))
 
-(defmethod reduce-f (body procedure (procedure-pool procedure-pool) &key set-procedure-new-body-p)
+(defmethod reduce-f (name (procedure-pool procedure-pool) &optional unused-1) ; WARNING: name whould be an atom
+  "Reduce the procedure body of the procedure of the name. And set the procedure body to its simpliest form"
+  (if (primitivep name)
+      (error "Error going to modify primitive procedure")
+      (let ((procedure (get-procedure name procedure-pool)))
+	(prog1
+	    (if procedure
+		(setf (procedure-body procedure)
+		      (reduce-f (procedure-body procedure)
+				procedure
+				procedure-pool))
+		name)
+	  (funcall *user-input-function*)))))
+
+(defmethod reduce-f (body procedure &optional (procedure-pool procedure-pool))
   "Reduce the body to its simpliest form (perfect form)."
   (let ((body-operator (if (atom body)
 			   body ; now the same as body unless recursion
 			   (if (atom (first body))
 			       (first body)
-			       :list-quote)))) ; even if the first element of the body is not an atom, it should be perfect reduced
+			       :list-quote)))); even if the first element of the body is not an atom, it should be perfect reduced
     (progn
       ;; reduce sub-procedure before invoke
       (unless (primitivep body-operator)
-	(let ((sub-procedure (get-procedure body-operator procedure-pool)))
-	  (when sub-procedure
-	    (reduce-f (procedure-body sub-procedure)
-		      sub-procedure
-		      procedure-pool
-		      :set-procedure-new-body-p t))))
+	(reduce-f body-operator procedure-pool))
 
       ;; unless the operator is special-primitive-p, reduce arguments of this body
       (unless (or (atom body)
@@ -100,18 +107,14 @@
 								 (subseq body 1))
 							       (copy-tree (procedure-args procedure)))
 						       0
-						       *max-param-size*)) ; TODO: max-param-size should assert smaller than arg-size
+						       *arg-size*))
 					 (when (primitivep body-operator)
 					   (list (copy-tree (procedure-args procedure))
 						 procedure))
 					 (list procedure-pool)))))
-	    (let ((return-value (if (equalp body new-body)
-	    			    body
-	    			    (reduce-f new-body procedure procedure-pool))))
-	      (if set-procedure-new-body-p
-	    	  (setf (procedure-body procedure)
-	    		return-value)
-	    	  return-value)))))))
+	    (if (equalp body new-body)
+		body
+		(reduce-f new-body procedure procedure-pool)))))))
 
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
   (let* ((procedure (get-procedure symbol procedure-pool)))
@@ -128,7 +131,7 @@
 							 arg
 							 (copy-tree arg))))							 
 					       params
-					       (make-list *max-param-size* :initial-element sub-body)
+					       (make-list *arg-size* :initial-element sub-body)
 					       args))
 				       (if (atom sub-body)
 					   sub-body
@@ -167,7 +170,7 @@
 	       (format file-output-stream ; TODO: reindent file
 		       "~(~a~)" ; convert to lowercase
 		       (format nil
-			       "(~a ~a ~a ~%~a)~%~%"
+			       "(~a ~a ~% (~{~a~%  ~})~% ~a)~%~%"
 			       procedure-name
 			       (or (procedure-params procedure); WARNING: Do we have to check if it's a list?e
 				   "()")

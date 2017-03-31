@@ -165,7 +165,7 @@
 	       (format file-output-stream ; TODO: reindent file
 		       "~(~a~)" ; convert to lowercase
 		       (format nil
-			       "(~a ~a ~a ~%~a)~%~%"
+			       "(~a ~a ~% (~{~a~%  ~})~% ~a)~%~%"
 			       procedure-name
 			       (or (procedure-params procedure); WARNING: Do we have to check if it's a list?e
 				   "()")

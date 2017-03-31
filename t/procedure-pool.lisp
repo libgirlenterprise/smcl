@@ -37,7 +37,7 @@
 					  6
 					  12
 					  16
-					  1))
+					  7))
 
 (setf com.libgirl.smcl::*user-input-function*
       *nil-function*)
@@ -226,7 +226,24 @@
 	(progn
 	  (com.libgirl.smcl::export-to-file *test-export-to-file-filepath*
 					    cl-user::procedure-pool)
-	  (pass "file exported"))
+	  (with-open-file (file-stream (pathname *test-export-to-file-filepath*))
+	    (mapcar (lambda (got expected)
+		      (is-print (princ got)
+				(format nil
+					"~a"
+					expected)))
+		    (let ((procedure-read))
+		      (loop while (setf procedure-read
+					(read file-stream nil))
+			    collect (copy-tree procedure-read)))
+		    (mapcar #'list
+			    procedure-name-list
+			    procedure-param-list
+			    procedure-arg-list
+			    (let ((expected (copy-tree procedure-body-list)))
+			      (setf (first expected) :x1
+				    (third expected) (list :p1 :z1 :d))
+			      expected)))))
 	(fail (format nil
 		      "~a~%~a"
 		      "please set *test-export-to-file-filepath* in t/smcl-test-config.lisp ."

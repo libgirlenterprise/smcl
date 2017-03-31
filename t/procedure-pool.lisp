@@ -36,7 +36,8 @@
 					  6
 					  6
 					  12
-					  16))
+					  16
+					  1))
 
 (setf com.libgirl.smcl::*user-input-function*
       *nil-function*)
@@ -231,15 +232,20 @@
     (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
 									   cl-user::procedure-pool))
 	:x1)
-    (finalize)))
+    (finalize))
 
-  ;(subtest "test export-to-file"
-					;(plan (seventh *subtest-number-list*))
-  ;; (com.libgirl.smcl::export-to-file (format nil
-  ;; 					    "~a"
-  ;; 					    (read))
-  ;; 				    cl-user::procedure-pool))
-   ; (finalize)))
+  (subtest "test export-to-file"
+    (plan (seventh *subtest-number-list*))
+    (if *test-export-to-file-filepath*
+	(progn
+	  (com.libgirl.smcl::export-to-file *test-export-to-file-filepath*
+					    cl-user::procedure-pool)
+	  (pass "file exported"))
+	(fail (format nil
+		      "~a~%~a"
+		      "please set *test-export-to-file-filepath* in t/smcl-test-config.lisp ."
+		      "use t/smcl-test-config.sample.lisp to create your own t/smcl-test-config.lisp")))
+    (finalize)))
     
 (finalize)
 

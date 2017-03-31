@@ -9,7 +9,7 @@
 
 (diag "smcl-test initialization")
 (plan nil)
-(defvar *test-export-to-file-filepath*)
+(defvar *test-export-to-file-filepath* nil)
 
 (finalize)
 

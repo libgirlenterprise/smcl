@@ -94,11 +94,7 @@
     (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :y
 									   cl-user::procedure-pool))
 	:v)
-    (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
-												   cl-user::procedure-pool))
-				(com.libgirl.smcl::get-procedure :x cl-user::procedure-pool)
-				cl-user::procedure-pool
-				:set-procedure-new-body-p t)
+    (com.libgirl.smcl::reduce-f :x cl-user::procedure-pool)
     (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
 									   cl-user::procedure-pool))
 	:v)
@@ -148,17 +144,12 @@
 									    (make-list 5
 										       :initial-element (make-list com.libgirl.smcl::*arg-size*
 														   :initial-element '0))
-									    procedure-body-list)))
-	   (procedure-x (com.libgirl.smcl::get-procedure :x
-							 cl-user::procedure-pool)))
+									    procedure-body-list))))
       ;;after initialization, name-body corresponding should be still the same
       (test-multiple-name-body-pairs procedure-name-list
 				     procedure-body-list
 				     cl-user::procedure-pool)
-      (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body procedure-x)
-				  procedure-x
-				  cl-user::procedure-pool
-				  :set-procedure-new-body-p t)
+      (com.libgirl.smcl::reduce-f :x cl-user::procedure-pool)
       (test-multiple-name-body-pairs (append procedure-name-list
 					     (list :u :b))
 				     (list :w :w :w :c :c nil nil)
@@ -223,12 +214,7 @@
 					   (third expected) (list :p1 :z1 :d))
 				     expected)
 				   cl-user::procedure-pool)
-    (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
-												   cl-user::procedure-pool))
-				(com.libgirl.smcl::get-procedure :x
-								 cl-user::procedure-pool)
-				cl-user::procedure-pool
-				:set-procedure-new-body-p t)
+    (com.libgirl.smcl::reduce-f :x cl-user::procedure-pool)
     (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
 									   cl-user::procedure-pool))
 	:x1)

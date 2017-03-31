@@ -145,7 +145,8 @@
       (equal procedure-name :defun)))
     
 (defun apply-primitive-f (primitive-name params default-args procedure procedure-pool)
-  (format t "~% apply-primitive-f")
+  (format t "~%apply-primitive-f")
+  (format t "~%  params: ~s~%  args: ~s" params default-args)
   (print (if (not (primitivep primitive-name))
       (error "Apply Non-primitive Error")
       (if (special-primitive-p primitive-name)

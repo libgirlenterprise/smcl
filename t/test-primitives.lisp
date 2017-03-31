@@ -120,18 +120,22 @@
 
 
 (defparameter *test-procedure-pool*
-  (let* ((procedure-name-list (list :list-quote-no-param
-				    :list-quote-one-param)) 
+  (let* ((procedure-name-list (list :no-param
+				    :one-param
+				    :two-params)) 
 	 (procedure-param-list (list nil
-				     (list :p1)))
+				     (list :p1)
+				     (list :p1 :p2)))
 	 (procedure-arg-list (mapcar (lambda (raw-list)
 				       (append raw-list
 					       (make-list (- com.libgirl.smcl::*arg-size*
 							     (length raw-list))
 							  :initial-element :0)))
 				     (list (list :a1 :a2)
+					   (list :a1 :a2)
 					   (list :a1 :a2))))
 	 (procedure-body-list (list (list :list-quote :xx :yy)
+				    (list :list-quote :xx :yy)
 				    (list :list-quote :xx :yy)))
 	 (cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
 						 :init-procedures (mapcar #'list
@@ -143,7 +147,7 @@
     ))
 
 (defun get-proc (name)
-  (print name)
+  (format t "~%proc: ~s" name)
   (print (com.libgirl.smcl::procedure-params (com.libgirl.smcl::get-procedure name *test-procedure-pool*)))
   (print (com.libgirl.smcl::procedure-args (com.libgirl.smcl::get-procedure name *test-procedure-pool*)))
   (print (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure name *test-procedure-pool*)))
@@ -153,29 +157,66 @@
 
 
 (defun test-apply-primitive-f (primitive-name procedure-name)
+  (format t "~%~%---~s---" primitive-name)
   (let* ((procedure (get-proc procedure-name))
 	 (params (com.libgirl.smcl::procedure-params procedure))
 	 (args (com.libgirl.smcl::procedure-args procedure)))
     (com.libgirl.smcl::apply-primitive-f primitive-name
 					 (cond ((not params) args)
-						      ((= params 1) (append  params (list (car args)))) 
-						      ((= params 2)))
+					       ((= (length params) 1) (append  params (list (car args)))) 
+					       ((= (length params) 2) params))
 					 args
 					 procedure 
 					 *test-procedure-pool*)))
+(defun test-reduce-f-primitives (body procedure-name)
+  (format t "~%~%---~s---" body)
+  (let* ((procedure (get-proc procedure-name)))
+    (com.libgirl.smcl::reduce-f body procedure *test-procedure-pool*)))
 
  (define-test test-apply-primitive-f
-   (assert-equal (list :list-quote :a1 :a2) (test-apply-primitive-f :list-quote :list-quote-no-param))
+   (assert-equal (list :list-quote :a1 :a2) (test-apply-primitive-f :list-quote :no-param))
+   (assert-equal (list :list-quote :p1 :a1) (test-apply-primitive-f :list-quote :one-param))
+   (assert-equal (list :list-quote :p1 :p2) (test-apply-primitive-f :list-quote :two-params))
+   (assert-equal (list :list-quote :a1 :a2) (test-apply-primitive-f :cons :no-param))
+   (assert-equal (list :list-quote :p1 :a1) (test-apply-primitive-f :cons :one-param))
+   (assert-equal (list :list-quote :p1 :p2) (test-apply-primitive-f :cons :two-params))
    )
 
-;; (define-test test-reduce-f-primitives
-;;   (assert-equal (get-proc :list-quote)
-;; 		(com.libgirl.smcl::get-procedure :list-quote *test-procedure-pool*))
-;;   ;; ??
-;;   (assert-equal (list :list-quote :a1 :a2)
-;; 		(com.libgirl.smcl::reduce-f :list-quote (get-proc :list-quote-no-param) *test-procedure-pool*))
-;;   ;; (assert-equal (list :list-quote :a1 :a2) (com.libgirl.smcl::reduce-f :list-quote (get-proc :list-quote-one-param) *test-procedure-pool*))
-;;   )
+
+
+(define-test test-reduce-f-primitives
+  (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :list-quote :no-param))
+  (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :list-quote :one-param))
+  (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :list-quote :two-params))
+  (assert-equal (list :list-quote :c :a1) (test-reduce-f-primitives (list :list-quote :c) :two-params))
+  (assert-equal (list :list-quote :c :d) (test-reduce-f-primitives (list :list-quote :c :d) :two-params))
+  (assert-equal (list :list-quote (list :list-quote :c :d) :e)
+		(test-reduce-f-primitives (list :list-quote (list :list-quote :c :d) :e)
+					  :two-params))
+  (assert-equal (list :list-quote :c (list :list-quote :d :e))
+		(test-reduce-f-primitives (list :list-quote :c (list :list-quote :d :e))
+					  :two-params))
+  (assert-equal (list :list-quote (list :list-quote :c :d) (list :list-quote :e :f))
+		(test-reduce-f-primitives (list :list-quote (list :list-quote :c :d) (list :list-quote :e :f))
+						:two-params))
+  (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :cons :no-param))
+  (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :cons :one-param))
+  (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :cons :two-params))
+  (assert-equal (list :list-quote :c :a1) (test-reduce-f-primitives (list :cons :c) :two-params))
+  (assert-equal (list :list-quote :c :d) (test-reduce-f-primitives (list :cons :c :d) :two-params))
+  
+  (assert-equal (list :list-quote (list :list-quote :c :d) :e)
+		(test-reduce-f-primitives (list :cons (list :list-quote :c :d) :e)
+					  :two-params))
+  (assert-equal (list :list-quote :c (list :list-quote :d :e))
+		(test-reduce-f-primitives (list :cons :c (list :list-quote :d :e))
+					  :two-params))
+  (assert-equal (list :list-quote (list :list-quote :c :d) (list :list-quote :e :f))
+		(test-reduce-f-primitives (list :cons (list :list-quote :c :d) (list :list-quote :e :f))
+						:two-params))
+					    
+    
+  )
 
 
 

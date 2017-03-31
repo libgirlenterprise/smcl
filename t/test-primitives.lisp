@@ -17,28 +17,6 @@
 				     :c)
 			       (list :list-quote :d :e)))
 
-(defparameter *test-procedure-pool*
-  (let* ((procedure-name-list (list :test-list-quote)) 
-	 (procedure-param-list (list (list :p1 :p2)))
-	 (procedure-arg-list (mapcar (lambda (raw-list)
-				       (append raw-list
-					       (make-list (- com.libgirl.smcl::*arg-size*
-							     (length raw-list))
-							  :initial-element :0)))
-				     (list (list :a1 :a2))))
-	 (procedure-body-list (list (list :list-quote :xx :yy)))
-	 (cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
-						 :init-procedures (mapcar #'list
-									  procedure-name-list
-									  procedure-param-list
-									  procedure-arg-list
-									  procedure-body-list))))
-    cl-user::procedure-pool
-    ))
-
-(defun get-proc (name)
-  (com.libgirl.smcl::get-procedure name
-				   *test-procedure-pool*))
 
 (define-test test-primitivep
   (assert-true (com.libgirl.smcl::primitivep :list-quote))
@@ -140,66 +118,64 @@
 ;;(com.libgirl.smcl::reduce-f :list-quote (get-proc :test-list-quote) *test-procedure-pool*)
 
 
-;; (print (com.libgirl.smcl::apply-primitive-f :list-quote
-;;  				     (list :aa1 :aa2)
-;;  				     (com.libgirl.smcl::procedure-args (get-proc :test-list-quote))
-;; 				     (get-proc :test-list-quote)
-;; 				     *test-procedure-pool*))
 
-(define-test test-reduce-f-primitives
-  (assert-equal (get-proc :list-quote) (com.libgirl.smcl::get-procedure :list-quote
-							       *test-procedure-pool*))
-  (assert-equal :list-quote (com.libgirl.smcl::reduce-f :list-quote (get-proc :test-list-quote) *test-procedure-pool*))
+(defparameter *test-procedure-pool*
+  (let* ((procedure-name-list (list :list-quote-no-param
+				    :list-quote-one-param)) 
+	 (procedure-param-list (list nil
+				     (list :p1)))
+	 (procedure-arg-list (mapcar (lambda (raw-list)
+				       (append raw-list
+					       (make-list (- com.libgirl.smcl::*arg-size*
+							     (length raw-list))
+							  :initial-element :0)))
+				     (list (list :a1 :a2)
+					   (list :a1 :a2))))
+	 (procedure-body-list (list (list :list-quote :xx :yy)
+				    (list :list-quote :xx :yy)))
+	 (cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
+						 :init-procedures (mapcar #'list
+									  procedure-name-list
+									  procedure-param-list
+									  procedure-arg-list
+									  procedure-body-list))))
+    cl-user::procedure-pool
+    ))
+
+(defun get-proc (name)
+  (print name)
+  (print (com.libgirl.smcl::procedure-params (com.libgirl.smcl::get-procedure name *test-procedure-pool*)))
+  (print (com.libgirl.smcl::procedure-args (com.libgirl.smcl::get-procedure name *test-procedure-pool*)))
+  (print (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure name *test-procedure-pool*)))
+  (format t "~%")
+  (com.libgirl.smcl::get-procedure name *test-procedure-pool*)
   )
 
 
+(defun test-apply-primitive-f (primitive-name procedure-name)
+  (let* ((procedure (get-proc procedure-name))
+	 (params (com.libgirl.smcl::procedure-params procedure))
+	 (args (com.libgirl.smcl::procedure-args procedure)))
+    (com.libgirl.smcl::apply-primitive-f primitive-name
+					 (cond ((not params) args)
+						      ((= params 1) (append  params (list (car args)))) 
+						      ((= params 2)))
+					 args
+					 procedure 
+					 *test-procedure-pool*)))
+
+ (define-test test-apply-primitive-f
+   (assert-equal (list :list-quote :a1 :a2) (test-apply-primitive-f :list-quote :list-quote-no-param))
+   )
+
+;; (define-test test-reduce-f-primitives
+;;   (assert-equal (get-proc :list-quote)
+;; 		(com.libgirl.smcl::get-procedure :list-quote *test-procedure-pool*))
+;;   ;; ??
+;;   (assert-equal (list :list-quote :a1 :a2)
+;; 		(com.libgirl.smcl::reduce-f :list-quote (get-proc :list-quote-no-param) *test-procedure-pool*))
+;;   ;; (assert-equal (list :list-quote :a1 :a2) (com.libgirl.smcl::reduce-f :list-quote (get-proc :list-quote-one-param) *test-procedure-pool*))
+;;   )
 
 
-;; (define-test test-defun
-;;   (let* ((procedure-name-list (list :x :y :z :b :a :0 :c)) 
-;; 	 (procedure-param-list (list nil
-;; 				     (list :p1 :p2)
-;; 				     (list :p1 :p2)
-;; 				     (list :p1 :p2)
-;; 				     (list :p1)
-;; 				     (list :p1 :p2)
-;; 				     nil))
-;; 	 (procedure-arg-list (mapcar (lambda (raw-list)
-;; 				       (append raw-list
-;; 					       (make-list (- com.libgirl.smcl::*arg-size*
-;; 							     (length raw-list))
-;; 							  :initial-element :0)))
-;; 				     (list (list :x1 :x2)
-;; 					   nil
-;; 					   (list :a1 :a2)
-;; 					   (list :b1 :b2)
-;; 					   (list :aa)
-;; 					   nil
-;; 					   nil)))
-;; 	 (procedure-body-list (list (list :y
-;; 					  (list :z :y :v)
-;; 					  (list :a
-;; 						(list :b :c :k)))
-;; 				    (list :p1 :p2 :k)
-;; 				    (list :p1
-;; 					  (list :b :p2)
-;; 					  :c)
-;; 				    :p2
-;; 				    :p1
-;; 				    :p2
-;; 				    :d))
-;; 	 (cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
-;; 						 :init-procedures (mapcar #'list
-;; 									  procedure-name-list
-;; 									  procedure-param-list
-;; 									  procedure-arg-list
-;; 									  procedure-body-list)))
-;; 	 (test-procedure (com.libgirl.smcl::get-procedure :z
-;; 							  cl-user::procedure-pool)))
-;;     (assert-equal (list :p1 :p2)  (com.libgirl.smcl::procedure-params test-procedure))
-;;     (assert-equal  (list :a1 :a2) (com.libgirl.smcl::procedure-args test-procedure))
-;;     (assert-equal (list :p1
-;; 			(list :b :p2)
-;; 			:c)
-;; 		  (com.libgirl.smcl::procedure-body test-procedure))))
-  
+

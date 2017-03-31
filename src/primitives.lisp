@@ -7,10 +7,10 @@
 ;;11 22 -> (LIST-QUOTE 11 22)
 (setf (gethash :list-quote primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
-	(cons :list-quote (cons param-x param-y))))
+	 (cons :list-quote (cons param-x  param-y))))
 (setf (gethash :cons primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
-	(list :list-quote param-x param-y)))
+	 (cons :list-quote (cons param-x  param-y))))
 ;;(:list-quote '11 '22) -> '11, that's just shaka wants
 (setf (gethash :car primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
@@ -145,17 +145,13 @@
       (equal procedure-name :defun)))
     
 (defun apply-primitive-f (primitive-name params default-args procedure procedure-pool)
-  (if (not (primitivep primitive-name))
+  (format t "~% apply-primitive-f")
+  (print (if (not (primitivep primitive-name))
       (error "Apply Non-primitive Error")
       (if (special-primitive-p primitive-name)
 	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
-	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
+	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args))))))
 
-;; (let ((list-one (list 1 2 3 4)))
-;;   (let ((list-let-list list-one))
-;;     (delete 2 list-one)
-;;     (print list-one)
-;;     (print list-let-list)))
 
 
 

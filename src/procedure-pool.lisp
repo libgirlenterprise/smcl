@@ -3,20 +3,28 @@
 
 (in-package :cl-user)
 (defpackage com.libgirl.smcl
-  (:use :cl :iterate)
+  (:use :cl :iterate :alexandria)
   (:export :smcl-run))
 
 (in-package :com.libgirl.smcl)
 
 (defparameter *arg-size* 2)
 
-(defvar *user-input-function*)
-
 (defun make-user-input-function (output-file-pathname procedure-pool) ;WARNING: we haven't handle file access error
-  (lambda ()
-    (case (read)
-      ('export (export-to-file output-file-pathname procedure-pool))
-      ('exit (sb-ext:exit)))))
+  #'(lambda ()
+      (format t "Say Something:~%")
+      (let ((input-read (read-line)))
+	(format t
+		"I got your ~a~%"
+		input-read)
+	(switch (input-read :test #'equal)
+	  ("export" (progn
+		     (export-to-file output-file-pathname procedure-pool)
+		     (format t  "File Exported!!~%~%")))
+	  ("ex" (progn
+		  (format t "Bye Bye~%~%")
+		  (sb-ext:exit)))
+	  ("abc" (format t "ABC!!~%"))))))
 
 (defstruct procedure
   (params nil :type list)
@@ -25,7 +33,10 @@
 
 (defclass procedure-pool ()
   ((procedures :type hash-table
-	       :initform (make-hash-table))))
+	       :initform (make-hash-table))
+   (user-io-function :accessor user-io-function
+		     :type function
+		     :initform (lambda () ()))))
 
 (defgeneric reduce-f (body procedure-or-procedure-pool &optional procedure-pool-or-unused))
 
@@ -66,7 +77,7 @@
 				procedure
 				procedure-pool))
 		name)
-	  (funcall *user-input-function*)))))
+	  (funcall (user-io-function procedure-pool))))))
 
 (defmethod reduce-f (body procedure &optional (procedure-pool procedure-pool))
   "Reduce the body to its simpliest form (perfect form)."
@@ -91,7 +102,7 @@
 		(reduce-f (nth i body)
 			  procedure
 			  procedure-pool))
-	  (funcall *user-input-function*)))
+	  (funcall (user-io-function procedure-pool))))
       
       (if (find body-operator
 		(procedure-params procedure)) ; it means body-operator not determined because it is a parameter. This case body is already perfect

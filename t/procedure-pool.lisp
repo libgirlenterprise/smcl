@@ -5,8 +5,6 @@
   (:import-from :com.libgirl.smcl-test :*test-export-to-file-filepath*))
 (in-package :com.libgirl.smcl-test.procedure-pool)
 
-(defparameter *nil-function* (lambda () ())) ;TODO: make it a constant
-
 (defparameter *simple-case-data-size* 3)
 
 (defparameter *simple-case-data* (list (list :x :y :z)
@@ -17,7 +15,8 @@
 				       (list :y :z :v)))
 
 (defparameter *non-export-symbol-list* '("*ARG-SIZE*"
-					 "*USER-INPUT-FUNCTION*"
+					 "USER-IO-FUNCTION"
+					 "GET-USER-IO-FUNCTION"
 					 "MAKE-USER-INPUT-FUNCTION"
 					 "PROCEDURE"
 					 "PROCEDURE-PARAMS"
@@ -38,9 +37,6 @@
 					  12
 					  16
 					  7))
-
-(setf com.libgirl.smcl::*user-input-function*
-      *nil-function*)
 
 (defun run-program-for-make-user-input-function (input-stream)
   (sb-ext:run-program "/usr/local/bin/sbcl"

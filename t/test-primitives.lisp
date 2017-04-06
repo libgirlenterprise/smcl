@@ -33,8 +33,8 @@
 (define-test test-special-primitive-p
   (assert-true (com.libgirl.smcl::special-primitive-p :defun))
   (assert-true (com.libgirl.smcl::special-primitive-p :when))
-  (assert-true (not (or (com.libgirl.smcl::special-primitive-p :list-quote)
-			(com.libgirl.smcl::special-primitive-p :cons)
+  (assert-true (com.libgirl.smcl::special-primitive-p :list-quote))
+  (assert-true (not (or (com.libgirl.smcl::special-primitive-p :cons)
 			(com.libgirl.smcl::special-primitive-p :car)
 			(com.libgirl.smcl::special-primitive-p :cdr)
 			(com.libgirl.smcl::special-primitive-p :eq)
@@ -185,6 +185,7 @@
 
 
 (define-test test-reduce-f-primitives
+  ;;list-quote
   (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :list-quote :no-param))
   (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :list-quote :one-param))
   (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :list-quote :two-params))
@@ -198,7 +199,8 @@
 					  :two-params))
   (assert-equal (list :list-quote (list :list-quote :c :d) (list :list-quote :e :f))
 		(test-reduce-f-primitives (list :list-quote (list :list-quote :c :d) (list :list-quote :e :f))
-						:two-params))
+					  :two-params))
+  ;;cons
   (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :cons :no-param))
   (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :cons :one-param))
   (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :cons :two-params))
@@ -213,9 +215,34 @@
 					  :two-params))
   (assert-equal (list :list-quote (list :list-quote :c :d) (list :list-quote :e :f))
 		(test-reduce-f-primitives (list :cons (list :list-quote :c :d) (list :list-quote :e :f))
-						:two-params))
-					    
-    
+					  :two-params))
+  ;;car
+  (assert-equal :a1 (test-reduce-f-primitives :car :no-param))
+  (assert-equal :a1 (test-reduce-f-primitives :car :one-param))
+  (assert-equal :a1 (test-reduce-f-primitives :car :two-params))
+  (assert-equal :c (test-reduce-f-primitives (list :car :c) :two-params))
+  (assert-equal :c (test-reduce-f-primitives (list :car :c :d) :two-params))
+  
+  (assert-equal :c
+		(test-reduce-f-primitives (list :car (list :list-quote :c :d) :e)
+					  :two-params))
+  (assert-equal :c
+		(test-reduce-f-primitives (list :car :c (list :list-quote :d :e))
+					  :two-params))
+  (assert-equal :c 
+		(test-reduce-f-primitives (list :car (list :list-quote :c :d) (list :list-quote :e :f))
+					  :two-params))
+  (assert-equal :not-list-quote
+		(test-reduce-f-primitives (list :car (list :not-list-quote :c :d) :e)
+					  :two-params))
+  (assert-equal :not-list-quote
+		(test-reduce-f-primitives (list :car (list :not-list-quote :c :d) (list :list-quote :e :f))
+					  :two-params))
+  (assert-equal (list :list-quote :a :b)
+		(test-reduce-f-primitives (list :car (list :list-quote (list :list-quote :a :b) :c) :e)
+					  :two-params))
+  
+      
   )
 
 

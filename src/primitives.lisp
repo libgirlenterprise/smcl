@@ -6,21 +6,26 @@
 (setf primitives (make-hash-table))
 ;;11 22 -> (LIST-QUOTE 11 22)
 (setf (gethash :list-quote primitives)
-      (lambda (param-x param-y default-arg-1 default-arg-2)
+      (lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
 	 (cons :list-quote (cons param-x  param-y))))
 (setf (gethash :cons primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	 (cons :list-quote (cons param-x  param-y))))
 ;;(:list-quote '11 '22) -> '11, that's just shaka wants
+;;because car just use one param, so we choice the second one of that param
+;;but if the first one is the parameter of procedure, we should take it.
 (setf (gethash :car primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2)
 	 (if (listp param-x)
-			 (second param-x)
-			 param-x)))
+	     (if (equal (first param-x) :list-quote)
+		 (second param-x)
+		 (first param-x))
+	     param-x)))
+
 (setf (gethash :cdr primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2) 
 	 (if (listp param-x)
-			 (subseq param-x 1) ;not (cdr (second param-x))??
+			 (subseq param-x 2) ;
 			 :none)))
 (setf (gethash :when primitives)
       (lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
@@ -141,7 +146,8 @@
 
 
 (defun special-primitive-p (procedure-name)
-  (or (equal procedure-name :when)
+  (or (equal procedure-name :list-quote)
+      (equal procedure-name :when)
       (equal procedure-name :defun)))
     
 (defun apply-primitive-f (primitive-name params default-args procedure procedure-pool)

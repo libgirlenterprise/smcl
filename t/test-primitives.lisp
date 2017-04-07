@@ -183,7 +183,7 @@
    )
 
 
-
+(test-reduce-f-primitives :none :no-param)
 (define-test test-reduce-f-primitives
   ;;list-quote
   (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :list-quote :no-param))
@@ -241,6 +241,32 @@
 					  :two-params))
   (assert-equal (list :list-quote :a :b)
 		(test-reduce-f-primitives (list :car (list :list-quote (list :list-quote :a :b) :c) :e)
+					  :two-params))
+
+  ;;cdr
+  (assert-equal :none (test-reduce-f-primitives :cdr :no-param))
+  (assert-equal :none (test-reduce-f-primitives :cdr :one-param))
+  (assert-equal :none (test-reduce-f-primitives :cdr :two-params))
+  (assert-equal :none (test-reduce-f-primitives (list :cdr :c) :two-params))
+  (assert-equal :none (test-reduce-f-primitives (list :cdr :c :d) :two-params))
+  
+  (assert-equal (list :d)
+		(test-reduce-f-primitives (list :cdr (list :list-quote :c :d) :e)
+					  :two-params))
+  (assert-equal :none
+		(test-reduce-f-primitives (list :cdr :c (list :list-quote :d :e))
+					  :two-params))
+  (assert-equal (list :d)
+		(test-reduce-f-primitives (list :cdr (list :list-quote :c :d) (list :list-quote :e :f))
+					  :two-params))
+  (assert-equal :not-list-quote
+		(test-reduce-f-primitives (list :cdr (list :not-list-quote :c :d) :e)
+					  :two-params))
+  (assert-equal :not-list-quote
+		(test-reduce-f-primitives (list :cdr (list :not-list-quote :c :d) (list :list-quote :e :f))
+					  :two-params))
+  (assert-equal (list :list-quote :a :b)
+		(test-reduce-f-primitives (list :cdr (list :list-quote (list :list-quote :a :b) :c) :e)
 					  :two-params))
   
       

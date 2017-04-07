@@ -232,6 +232,7 @@
   (assert-equal :c 
 		(test-reduce-f-primitives (list :car (list :list-quote :c :d) (list :list-quote :e :f))
 					  :two-params))
+  ;;some perfect form have the params of the procedure in the FIRST place, so we need to take the first one.
   (assert-equal :not-list-quote
 		(test-reduce-f-primitives (list :car (list :not-list-quote :c :d) :e)
 					  :two-params))

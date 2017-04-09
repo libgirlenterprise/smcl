@@ -16,7 +16,6 @@
 
 (defparameter *non-export-symbol-list* '("*ARG-SIZE*"
 					 "USER-IO-FUNCTION"
-					 "GET-USER-IO-FUNCTION"
 					 "MAKE-USER-INPUT-FUNCTION"
 					 "PROCEDURE"
 					 "PROCEDURE-PARAMS"

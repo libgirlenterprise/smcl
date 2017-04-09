@@ -12,7 +12,7 @@
 
 (defun make-user-input-function (output-file-pathname procedure-pool) ;WARNING: we haven't handle file access error
   #'(lambda ()
-      (format t "Say Something:~%")
+      (format t "<input character> [e] [s] [q] ~%") ;export, save, quit
       (let ((input-read (read-line)))
 	(format t
 		"I got your ~a~%"
@@ -28,7 +28,7 @@
 
 (defstruct procedure
   (params nil :type list)
-  (args (make-list *arg-size* :initial-element '0) :type list)
+  (args (make-list *arg-size* :initial-element :0) :type list)
   (body nil)) ; should handle null case or any atom in list is not a symbol
 
 (defclass procedure-pool ()
@@ -47,6 +47,11 @@
 (defgeneric export-to-file (file-pathname procedure-pool))
 
 (defgeneric get-procedure (name procedure-pool))
+
+(defgeneric user-interfere (symbol procedure-pool))
+
+(defmethod user-interfere (symbol (procedure-pool procedure-pool))
+  symbol)
 
 (defmethod get-procedure (name (procedure-pool procedure-pool))
   (gethash name
@@ -70,22 +75,22 @@
   (if (primitivep name)
       (error "Error going to modify primitive procedure")
       (let ((procedure (get-procedure name procedure-pool)))
-	(prog1
-	    (if procedure
-		(setf (procedure-body procedure)
-		      (reduce-f (procedure-body procedure)
-				procedure
-				procedure-pool))
-		name)
-	  (funcall (user-io-function procedure-pool))))))
+	(if procedure
+	    (setf (procedure-body procedure)
+		  (reduce-f (procedure-body procedure)
+			    procedure
+			    procedure-pool))
+	    name))))
 
 (defmethod reduce-f (body procedure &optional (procedure-pool procedure-pool))
   "Reduce the body to its simpliest form (perfect form)."
-  (let ((body-operator (if (atom body)
+  (let* ((body-operator (if (atom body)
 			   body ; now the same as body unless recursion
 			   (if (atom (first body))
 			       (first body)
-			       :list-quote)))); even if the first element of the body is not an atom, it should be perfect reduced
+			       :list-quote))); even if the first element of the body is not an atom, it should be perfect reduced
+	 (body-operator (user-interfere body-operator
+					procedure-pool)))
     (progn
       ;; reduce sub-procedure before invoke
       (unless (primitivep body-operator)
@@ -101,8 +106,7 @@
 	  (setf (nth i body)
 		(reduce-f (nth i body)
 			  procedure
-			  procedure-pool))
-	  (funcall (user-io-function procedure-pool))))
+			  procedure-pool))))
       
       (if (find body-operator
 		(procedure-params procedure)) ; it means body-operator not determined because it is a parameter. This case body is already perfect

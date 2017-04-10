@@ -10,22 +10,7 @@
 
 (defparameter *arg-size* 2)
 
-(defun make-user-input-function (output-file-pathname procedure-pool) ;WARNING: we haven't handle file access error
-  #'(lambda (symbol-char)
-      (format t "<input character> [e] [s] [q] ~%") ;export, save, quit
-      (let ((input-read (read-line)))
-	(format t
-		"I got your ~a~%"
-		input-read)
-	(switch (input-read :test #'equal)
-	  ("export" (progn
-		     (export-to-file output-file-pathname procedure-pool)
-		     (format t  "File Exported!!~%~%")))
-	  ("ex" (progn
-		  (format t "Bye Bye~%~%")
-		  (sb-ext:exit)))
-	  ("abc" (format t "ABC!!~%")))
-	symbol-char)))
+(defvar *interface-char* nil)
 
 (defstruct procedure
   (params nil :type list)
@@ -34,9 +19,7 @@
 
 (defclass procedure-pool ()
   ((procedures :type hash-table
-	       :initform (make-hash-table))
-   (user-io-function :accessor user-io-function
-		     :initform nil)))
+	       :initform (make-hash-table))))
 
 (defgeneric reduce-f (body procedure-or-procedure-pool &optional procedure-pool-or-unused))
 
@@ -51,16 +34,15 @@
 (defgeneric user-interfere (symbol procedure-pool))
 
 (defmethod user-interfere (symbol (procedure-pool procedure-pool))
-  (if (user-io-function procedure-pool)
-      (let ((symbol-string (format nil
-				   "~(~a~)" ; TODO: think more about the case of the alphabet
-				   symbol)))
-	(read-from-string (format nil
-				  ":~{~a~}"
-				  (loop for symbol-char across symbol-string
-					collect (funcall (user-io-function procedure-pool)
-							 symbol-char)))))
-      symbol))
+  (let ((symbol-string (format nil
+			       "~(~a~)" ; TODO: think more about the case of the alphabet
+			       symbol)))
+    (read-from-string (format nil
+			      ":~{~a~}"
+			      (loop for symbol-char across symbol-string
+				    collect (progn
+					      (setf *interface-char* symbol-char)
+					      *interface-char*))))))
 
 (defmethod get-procedure (name (procedure-pool procedure-pool))
   (gethash name

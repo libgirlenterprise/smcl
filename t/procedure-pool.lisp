@@ -15,8 +15,6 @@
 				       (list :y :z :v)))
 
 (defparameter *non-export-symbol-list* '("*ARG-SIZE*"
-					 "USER-IO-FUNCTION"
-					 "MAKE-USER-INPUT-FUNCTION"
 					 "PROCEDURE"
 					 "PROCEDURE-PARAMS"
 					 "PROCEDURE-ARGS"

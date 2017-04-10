@@ -7,26 +7,32 @@
 ;;11 22 -> (LIST-QUOTE 11 22)
 (setf (gethash :list-quote primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2 procedure procedure-pool)
-	 (cons :list-quote (cons car-params  cdr-params))))
+	 (cons :list-quote (cons car-params cdr-params))))
 (setf (gethash :cons primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2)
-	 (cons :list-quote (cons car-params  cdr-params))))
+	(cons :list-quote (cons car-params cdr-params))))
+
+
 ;;(:list-quote '11 '22) -> '11, that's just shaka wants
 ;;because car just use one param, so we choice the second one of that param
 ;;but if the first one is the parameter of procedure, we should take it.
 (setf (gethash :car primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2)
-	 (if (listp car-params)
-	     (if (equal (first car-params) :list-quote)
-		 (second car-params)
-		 (first car-params))
-	     car-params)))
+	(if (listp car-params)
+	    (if (equal (first car-params) :list-quote)
+		(second car-params)
+		(first car-params))
+	    car-params)))
+
 
 (setf (gethash :cdr primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2) 
-	 (if (listp car-params)
-			 (subseq car-params 2) ;
-			 :none)))
+	(if (listp car-params)
+	    (if (equal (first car-params) :list-quote)
+		(append (list :list-quote) (subseq car-params 2))
+		(append (list :list-quote) (subseq car-params 1)))
+	    :none)))		;if cdr a non-list-quote list, it will return :none
+
 (setf (gethash :when primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2 procedure procedure-pool)
 	(list :list-quote (if (reduce-f car-params procedure procedure-pool) ;Is :list-quote necessary here? No
@@ -40,7 +46,7 @@
       (lambda (car-params cdr-params default-arg-1 default-arg-2)
 	(if (not (listp car-params))
 	    :true
-	    :none)))
+	    :none))) 
 (setf (gethash :true primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2)
 	:true))
@@ -155,7 +161,7 @@
       (equal procedure-name :defun)))
     
 (defun apply-primitive-f (primitive-name params default-args procedure procedure-pool)
-  (format t "~%apply-primitive-f")
+  (format t "~%apply-primitive-f  ~s" primitive-name)
   (format t "~%  params: ~s~%  args: ~s" params default-args)
   (print (if (not (primitivep primitive-name))
       (error "Apply Non-primitive Error")

@@ -173,6 +173,9 @@
   (let* ((procedure (get-proc procedure-name)))
     (com.libgirl.smcl::reduce-f body procedure *test-procedure-pool*)))
 
+
+;; (test-apply-primitive-f (list :cdr (list :list-quote (list :list-quote :a :b) :c) :e) :two-params)
+
  (define-test test-apply-primitive-f
    (assert-equal (list :list-quote :a1 :a2) (test-apply-primitive-f :list-quote :no-param))
    (assert-equal (list :list-quote :p1 :a1) (test-apply-primitive-f :list-quote :one-param))
@@ -180,10 +183,9 @@
    (assert-equal (list :list-quote :a1 :a2) (test-apply-primitive-f :cons :no-param))
    (assert-equal (list :list-quote :p1 :a1) (test-apply-primitive-f :cons :one-param))
    (assert-equal (list :list-quote :p1 :p2) (test-apply-primitive-f :cons :two-params))
+   
    )
 
-
-(test-reduce-f-primitives :none :no-param)
 (define-test test-reduce-f-primitives
   ;;list-quote
   (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :list-quote :no-param))
@@ -200,6 +202,7 @@
   (assert-equal (list :list-quote (list :list-quote :c :d) (list :list-quote :e :f))
 		(test-reduce-f-primitives (list :list-quote (list :list-quote :c :d) (list :list-quote :e :f))
 					  :two-params))
+  
   ;;cons
   (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :cons :no-param))
   (assert-equal (list :list-quote :a1 :a2) (test-reduce-f-primitives :cons :one-param))
@@ -250,22 +253,22 @@
   (assert-equal :none (test-reduce-f-primitives (list :cdr :c) :two-params))
   (assert-equal :none (test-reduce-f-primitives (list :cdr :c :d) :two-params))
   
-  (assert-equal (list :d)
+  (assert-equal (list :list-quote :d :a1)
 		(test-reduce-f-primitives (list :cdr (list :list-quote :c :d) :e)
 					  :two-params))
   (assert-equal :none
 		(test-reduce-f-primitives (list :cdr :c (list :list-quote :d :e))
 					  :two-params))
-  (assert-equal (list :d)
+  (assert-equal (list :list-quote :d :a1)
 		(test-reduce-f-primitives (list :cdr (list :list-quote :c :d) (list :list-quote :e :f))
 					  :two-params))
-  (assert-equal :not-list-quote
+  (assert-equal :none
 		(test-reduce-f-primitives (list :cdr (list :not-list-quote :c :d) :e)
 					  :two-params))
-  (assert-equal :not-list-quote
+  (assert-equal :none
 		(test-reduce-f-primitives (list :cdr (list :not-list-quote :c :d) (list :list-quote :e :f))
 					  :two-params))
-  (assert-equal (list :list-quote :a :b)
+  (assert-equal (list :list-quote :c :a1)
 		(test-reduce-f-primitives (list :cdr (list :list-quote (list :list-quote :a :b) :c) :e)
 					  :two-params))
   

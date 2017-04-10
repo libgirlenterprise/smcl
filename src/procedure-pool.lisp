@@ -4,13 +4,20 @@
 (in-package :cl-user)
 (defpackage com.libgirl.smcl
   (:use :cl :iterate :alexandria)
-  (:export :smcl-run))
+  (:export :smcl-thread-run))
 
 (in-package :com.libgirl.smcl)
 
 (defparameter *arg-size* 2)
 
 (defvar *interface-char* nil)
+
+(defvar *reduction-luck-semaphore* (sb-thread:make-semaphore :name "Reduction Lock"
+							     :count 0))
+
+(defvar *interface-char-mutex* (sb-thread:make-mutex :name "*interface-cha*'s mutex"))
+
+(defvar *smcl-thread* nil)
 
 (defstruct procedure
   (params nil :type list)
@@ -41,8 +48,12 @@
 			      ":~{~a~}"
 			      (loop for symbol-char across symbol-string
 				    collect (progn
-					      (setf *interface-char* symbol-char)
-					      *interface-char*))))))
+					      (sb-thread:with-mutex (*interface-char-mutex*)
+						(setf *interface-char* symbol-char))
+					      (sb-thread:signal-semaphore *reduction-luck-semaphore*)
+					      (sb-thread:wait-on-semaphore *reduction-luck-semaphore*)
+					      (sb-thread:with-mutex (*interface-char-mutex*)
+						*interface-char*)))))))
 
 (defmethod get-procedure (name (procedure-pool procedure-pool))
   (gethash name

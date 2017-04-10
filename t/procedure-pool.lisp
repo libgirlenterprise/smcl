@@ -53,7 +53,7 @@
 							    'com.libgirl.smcl)))
 		  :internal))
 	  *non-export-symbol-list*)
-  (ok (find-symbol "SMCL-RUN"))
+  (ok (find-symbol "SMCL-THREAD-RUN"))
   (finalize))
 
 

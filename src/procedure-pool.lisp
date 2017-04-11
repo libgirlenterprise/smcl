@@ -1,5 +1,6 @@
 ;;;; TODO:
 ;;;; 1. exception handling
+;;;; 2. protection of var such as *interface-char* , *lock-reduction-p* from race condition
 
 (in-package :cl-user)
 (defpackage com.libgirl.smcl
@@ -12,12 +13,14 @@
 
 (defvar *interface-char* nil)
 
-(defvar *reduction-luck-semaphore* (sb-thread:make-semaphore :name "Reduction Lock"
-							     :count 0))
+(defvar *api-semaphore* (sb-thread:make-semaphore :name "Semaphore handling smcl and API control passing"
+						  :count 0))
 
-(defvar *interface-char-mutex* (sb-thread:make-mutex :name "*interface-cha*'s mutex"))
+(defvar *lock-reduction-p* t)
 
 (defvar *smcl-thread* nil)
+
+(defvar *export-pathname* nil)
 
 (defstruct procedure
   (params nil :type list)
@@ -26,8 +29,7 @@
 
 (defclass procedure-pool ()
   ((procedures :type hash-table
-	       :initform (make-hash-table))
-   (export-pathname :initform nil)))
+	       :initform (make-hash-table))))
 
 (defgeneric reduce-f (body procedure-or-procedure-pool &optional procedure-pool-or-unused))
 
@@ -49,12 +51,15 @@
 			      ":~{~a~}"
 			      (loop for symbol-char across symbol-string
 				    collect (progn
-					      (sb-thread:with-mutex (*interface-char-mutex*)
-						(setf *interface-char* symbol-char))
-					      (sb-thread:signal-semaphore *reduction-luck-semaphore*)
-					      (sb-thread:wait-on-semaphore *reduction-luck-semaphore*)
-					      (sb-thread:with-mutex (*interface-char-mutex*)
-						*interface-char*)))))))
+					      (setf *interface-char* symbol-char)
+					      (loop while *lock-reduction-p*
+						    do (progn
+							 (sb-thread:signal-semaphore *api-semaphore*)
+							 (sb-thread:wait-on-semaphore *api-semaphore*)
+							 (when *export-pathname*
+							   (export-to-file procedure-pool))))
+					      (setf *lock-reduction-p* t)
+					      *interface-char*))))))
 
 (defmethod get-procedure (name (procedure-pool procedure-pool))
   (gethash name

@@ -10,24 +10,26 @@
 				     (loop while t
 					   do (loop for procedure-name being the hash-keys in procedures
 						    do (reduce-f procedure-name
-								 procedure-pool)))))))))
+								 procedure-pool))))))))
+  (sb-thread:wait-on-semaphore *api-semaphore*)) ; WARNING: poor performance
 
 (defun smcl-run-steps (&key (step-count 1)) ; step-count should >= 1
   (dotimes (i step-count t)
-    (sb-thread:signal-semaphore *reduction-luck-semaphore*)
-    (sb-thread:wait-on-semaphore *reduction-luck-semaphore*)))
+    (setf *lock-reduction-p* nil)
+    (sb-thread:signal-semaphore *api-semaphore*) ; WARNING: the performance will be very poor this way
+    (sb-thread:wait-on-semaphore *api-semaphore*)))
 
 (defun smcl-get-char ()
-  (sb-thread:with-mutex (*interface-char-mutex*)
-    *interface-char*))
+    *interface-char*)
 
 (defun smcl-set-char (char-to-set)
   "Input a character into smcl and return the character. Return nil if the input given is not a character."
   (when (characterp char-to-set) 
-    (sb-thread:with-mutex (*interface-char-mutex*)
-      (setf *interface-char* char-to-set))))
+    (setf *interface-char* char-to-set)))
 
-(defun smcl-export (output-file-pathname))
-    
-
+(defun smcl-export (output-file-pathname)
+  (setf *export-pathname* output-file-pathname)
+  (sb-thread:signal-semaphore *api-semaphore*) ; WARNING: the performance will be very poor this way
+  (sb-thread:wait-on-semaphore *api-semaphore*)
+  (setf *export-pathname* nil))
 

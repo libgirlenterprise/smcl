@@ -42,8 +42,8 @@
 	    :true
 	    :none)))
 (setf (gethash :atom primitives)
-      (lambda (car-params cdr-params default-arg-1 default-arg-2)
-	(if (not (listp car-params))
+      (lambda (params)
+	(if (not (listp params))
 	    :true
 	    :none))) 
 (setf (gethash :true primitives)

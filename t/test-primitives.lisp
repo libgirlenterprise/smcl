@@ -402,7 +402,86 @@
 						(list :not-list-quote-not-proc-param :c :d)
 						(list :not-list-quote-not-proc-param :e :f))
   					  :two-params))
+
+  ;; true
+  (assert-equal :true (test-reduce-f-primitives :true :no-param))
+  (assert-equal :true (test-reduce-f-primitives :true :one-param))
+  (assert-equal :true (test-reduce-f-primitives :true :two-params))
+  (assert-equal :true (test-reduce-f-primitives (list :true :c) :two-params))
+  (assert-equal :true (test-reduce-f-primitives (list :true :c :c) :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :true (list :list-quote :c :d) :e)
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :true :c (list :list-quote :d :e))
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :true (list :list-quote :c :d) (list :list-quote :e :f))
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :true (list :list-quote :c :d) (list :list-quote :c :d))
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :true (list :p1 :c :d) :e)
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :true (list :p1 :c :d) (list :p1 :c :d))
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :true
+						(list :not-list-quote-not-proc-param :c :d)
+						:e)
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :true
+						(list :not-list-quote-not-proc-param :c :d)
+						:not-list-quote-not-proc-param)
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :true
+						(list :not-list-quote-not-proc-param :c :d)
+						(list :not-list-quote-not-proc-param :e :f))
+  					  :two-params))
   
+  ;; none
+  (assert-equal :none (test-reduce-f-primitives :none :no-param))
+  (assert-equal :none (test-reduce-f-primitives :none :one-param))
+  (assert-equal :none (test-reduce-f-primitives :none :two-params))
+  (assert-equal :none (test-reduce-f-primitives (list :none :c) :two-params))
+  (assert-equal :none (test-reduce-f-primitives (list :none :c :c) :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :none (list :list-quote :c :d) :e)
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :none :c (list :list-quote :d :e))
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :none (list :list-quote :c :d) (list :list-quote :e :f))
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :none (list :list-quote :c :d) (list :list-quote :c :d))
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :none (list :p1 :c :d) :e)
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :none (list :p1 :c :d) (list :p1 :c :d))
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :none
+						(list :not-list-quote-not-proc-param :c :d)
+						:e)
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :none
+						(list :not-list-quote-not-proc-param :c :d)
+						:not-list-quote-not-proc-param)
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :none
+						(list :not-list-quote-not-proc-param :c :d)
+						(list :not-list-quote-not-proc-param :e :f))
+  					  :two-params))
   
  
 

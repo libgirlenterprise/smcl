@@ -30,16 +30,15 @@
 		(third (first params))
 		(cons :cdr params))     ; return original form
 	    :none)))	        	; if cdr a non-list-quote list, it will return :none
-
 (setf (gethash :when primitives)
       (lambda (params default-args procedure procedure-pool)
 	(if (not (equal :none
-			(reduce-f (first params) procedure procedure-pool)))  ;use our :true??
+			(reduce-f (first params) procedure  procedure-pool)))  ;use our :true?? yes, but not :none is :true
 	    (reduce-f (second params) procedure procedure-pool)
 	    :none)))
 (setf (gethash :eq primitives)		
-      (lambda (car-params cdr-params default-arg-1 default-arg-2)
-	(if (equal car-params cdr-params); car cdr are different meaning, cannot compare
+      (lambda (params)
+	(if (equal (first params) (second params)) 
 	    :true
 	    :none)))
 (setf (gethash :atom primitives)
@@ -48,7 +47,7 @@
 	    :true
 	    :none))) 
 (setf (gethash :true primitives)
-      (lambda (car-params cdr-params default-arg-1 default-arg-2)
+      (lambda (params)
 	:true))
 (setf (gethash :none primitives)
       (lambda (params)

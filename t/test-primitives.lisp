@@ -291,7 +291,6 @@
   (assert-equal :a2 (test-reduce-f-primitives :when :two-params))
   (assert-equal :a1 (test-reduce-f-primitives (list :when :c) :two-params))
   (assert-equal :d (test-reduce-f-primitives (list :when :c :d) :two-params))
-  
   (assert-equal :e
   		(test-reduce-f-primitives (list :when (list :list-quote :c :d) :e)
   					  :two-params))
@@ -316,9 +315,47 @@
   					  :two-params))
   (assert-equal :none
 		(test-reduce-f-primitives (list :when :none :a) :two-params))
+  ;; eq
+  (assert-equal :none (test-reduce-f-primitives :eq :no-param))
+  (assert-equal :none (test-reduce-f-primitives :eq :one-param))
+  (assert-equal :none (test-reduce-f-primitives :eq :two-params))
+  (assert-equal :none (test-reduce-f-primitives (list :eq :c) :two-params))
+  (assert-equal :true (test-reduce-f-primitives (list :eq :c :c) :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :eq (list :list-quote :c :d) :e)
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :eq :c (list :list-quote :d :e))
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :eq (list :list-quote :c :d) (list :list-quote :e :f))
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :eq (list :list-quote :c :d) (list :list-quote :c :d))
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :eq
+						(list :not-list-quote-not-proc-param :c :d)
+						:e)
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :eq
+						(list :not-list-quote-not-proc-param :c :d)
+						:not-list-quote-not-proc-param)
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :eq
+						(list :not-list-quote-not-proc-param :c :d)
+						(list :not-list-quote-not-proc-param :e :f))
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :eq (list :list-quote (list :list-quote :a :b) :c) :e)
+  					  :two-params))
+  
  
 
   )
+
 
 
 

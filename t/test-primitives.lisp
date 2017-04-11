@@ -302,14 +302,20 @@
   		(test-reduce-f-primitives (list :when (list :list-quote :c :d) (list :list-quote :e :f))
   					  :two-params))
   (assert-equal :e
-  		(test-reduce-f-primitives (list :when (list :not-list-quote-not-proc-param :c :d) :e)
+  		(test-reduce-f-primitives (list :when
+						(list :not-list-quote-not-proc-param :c :d)
+						:e)
   					  :two-params))
   (assert-equal :not-list-quote-not-proc-param
-  		(test-reduce-f-primitives (list :when (list :not-list-quote-not-proc-param :c :d) (list :not-list-quote-not-proc-param :e :f))
+  		(test-reduce-f-primitives (list :when
+						(list :not-list-quote-not-proc-param :c :d)
+						(list :not-list-quote-not-proc-param :e :f))
   					  :two-params))
   (assert-equal :e
   		(test-reduce-f-primitives (list :when (list :list-quote (list :list-quote :a :b) :c) :e)
   					  :two-params))
+  (assert-equal :none
+		(test-reduce-f-primitives (list :when :none :a) :two-params))
  
 
   )

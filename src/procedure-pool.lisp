@@ -26,7 +26,8 @@
 
 (defclass procedure-pool ()
   ((procedures :type hash-table
-	       :initform (make-hash-table))))
+	       :initform (make-hash-table))
+   (export-pathname :initform nil)))
 
 (defgeneric reduce-f (body procedure-or-procedure-pool &optional procedure-pool-or-unused))
 

@@ -10,14 +10,12 @@
 	(cons :list-quote params)))
 (setf (gethash :cons primitives)
       (lambda (params)
-	(cons :list-quote (cons car-params cdr-params))))
-
-
+	(cons :list-quote params)))
 ;;(:list-quote '11 '22) -> '11, that's just shaka wants
 ;;because car just use one param, so we choice the second one of that param
 ;;but if the first one is the parameter of procedure, we should take it.
 (setf (gethash :car primitives)
-      (lambda (car-params cdr-params default-arg-1 default-arg-2)
+      (lambda (params)
 	(if (listp car-params)
 	    (if (equal (first car-params) :list-quote)
 		(second car-params)

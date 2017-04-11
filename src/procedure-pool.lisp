@@ -70,10 +70,10 @@
 
 (defmethod reduce-f (body procedure &optional (procedure-pool procedure-pool))
   "Reduce the body to its simpliest form (perfect form)."
-  (let ((body-operator (if (atom body)
+  (let* ((body-operator (if (atom body)
 			   body ; now the same as body unless recursion
 			   (if (atom (first body))
-			       (first body)
+			       (first  body)
 			       :list-quote)))); even if the first element of the body is not an atom, it should be perfect reduced
     (progn
       ;; reduce sub-procedure before invoke

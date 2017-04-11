@@ -363,6 +363,46 @@
   (assert-equal :none
   		(test-reduce-f-primitives (list :eq (list :list-quote (list :list-quote :a :b) :c) :e)
   					  :two-params))
+  ;; atom
+  (assert-equal :true (test-reduce-f-primitives :atom :no-param))
+  (assert-equal :true (test-reduce-f-primitives :atom :one-param))
+  (assert-equal :true (test-reduce-f-primitives :atom :two-params))
+  (assert-equal :true (test-reduce-f-primitives (list :atom :c) :two-params))
+  (assert-equal :true (test-reduce-f-primitives (list :atom :c :c) :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :atom (list :list-quote :c :d) :e)
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :atom :c (list :list-quote :d :e))
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :atom (list :list-quote :c :d) (list :list-quote :e :f))
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :atom (list :list-quote :c :d) (list :list-quote :c :d))
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :atom (list :p1 :c :d) :e)
+  					  :two-params))
+  (assert-equal :none
+  		(test-reduce-f-primitives (list :atom (list :p1 :c :d) (list :p1 :c :d))
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :atom
+						(list :not-list-quote-not-proc-param :c :d)
+						:e)
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :atom
+						(list :not-list-quote-not-proc-param :c :d)
+						:not-list-quote-not-proc-param)
+  					  :two-params))
+  (assert-equal :true
+  		(test-reduce-f-primitives (list :atom
+						(list :not-list-quote-not-proc-param :c :d)
+						(list :not-list-quote-not-proc-param :e :f))
+  					  :two-params))
+  
   
  
 

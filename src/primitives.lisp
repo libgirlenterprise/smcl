@@ -43,7 +43,7 @@
 	    :none)))
 (setf (gethash :atom primitives)
       (lambda (params)
-	(if (not (listp params))
+	(if (not (listp (first params)))
 	    :true
 	    :none))) 
 (setf (gethash :true primitives)

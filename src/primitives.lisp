@@ -4,39 +4,40 @@
 (defparameter primitives nil)
 
 (setf primitives (make-hash-table))
-;;11 22 -> (LIST-QUOTE 11 22)
+;; 11 22 -> (LIST-QUOTE 11 22)
 (setf (gethash :list-quote primitives)
       (lambda (params)
 	(cons :list-quote params)))
 (setf (gethash :cons primitives)
       (lambda (params)
 	(cons :list-quote params)))
-;;(:list-quote '11 '22) -> '11, that's just shaka wants
-;;because car just use one param, so we choice the second one of that param
-;;but if the first one is the parameter of procedure, we should take it.
+;; (:list-quote '11 '22) -> '11, that's just shaka wants
+;; because car just use one param, so we choice the second one of that param
+;; but if the first one is the parameter of procedure, we should take it.
 (setf (gethash :car primitives)
       (lambda (params)
-	(if (listp car-params)
-	    (if (equal (first car-params) :list-quote)
-		(second car-params)
-		:not-yet)
-	    car-params)))
+	(if (listp (first params))
+	    (if (equal (first (first params)) :list-quote)
+		(second (first params))
+		(cons :car params))
+	    params)))
 
 
 (setf (gethash :cdr primitives)
-      (lambda (car-params cdr-params default-arg-1 default-arg-2) 
-	(if (listp car-params)
-	    (if (equal (first car-params) :list-quote)
-		(third car-params)
-		:not-yet);return original form (:cdr (car-params cdr-params))
-	    :none)))		;if cdr a non-list-quote list, it will return :none
+      (lambda (params) 
+	(if (listp (first params))
+	    (if (equal (first (first params)) :list-quote)
+		(third (first params))
+		(cons :cdr params))     ; return original form
+	    :none)))	        	; if cdr a non-list-quote list, it will return :none
 
 (setf (gethash :when primitives)
-      (lambda (car-params cdr-params default-arg-1 default-arg-2 procedure procedure-pool)
-	(if (reduce-f car-params procedure procedure-pool) ;Is :list-quote necessary here? No ;use our :true
-	    (reduce-f (car cdr-params) procedure procedure-pool)
+      (lambda (params default-args procedure procedure-pool)
+	(if (not (equal :none
+			(reduce-f (first params) procedure procedure-pool)))  ;use our :true??
+	    (reduce-f (second params) procedure procedure-pool)
 	    :none)))
-(setf (gethash :eq primitives)
+(setf (gethash :eq primitives)		
       (lambda (car-params cdr-params default-arg-1 default-arg-2)
 	(if (equal car-params cdr-params); car cdr are different meaning, cannot compare
 	    :true
@@ -50,7 +51,7 @@
       (lambda (car-params cdr-params default-arg-1 default-arg-2)
 	:true))
 (setf (gethash :none primitives)
-      (lambda (car-params cdr-params default-arg-1 default-arg-2)
+      (lambda (params)
 	:none))
 (setf (gethash :defun primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2 procedure procedure-pool)
@@ -164,7 +165,8 @@
   (format t "~%  params: ~s~%  args: ~s" params default-args)
   (print (if (not (primitivep primitive-name))
 	     (error "Apply Non-primitive Error")
-	     (if (equal primitive-name :defun)
+	     (if (or (equal primitive-name :defun)
+		     (equal primitive-name :when))
 		 (funcall (gethash primitive-name primitives) params default-args procedure procedure-pool)
 		 (funcall (gethash primitive-name primitives) params)))))
 

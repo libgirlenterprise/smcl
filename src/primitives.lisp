@@ -35,8 +35,9 @@
 
 (setf (gethash :when primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2 procedure procedure-pool)
-	(list :list-quote (if (reduce-f car-params procedure procedure-pool) ;Is :list-quote necessary here? No
-			      (reduce-f cdr-params procedure procedure-pool)))))
+	(if (reduce-f (print car-params) procedure procedure-pool) ;Is :list-quote necessary here? No ;use our :true
+	    (reduce-f (car cdr-params) procedure procedure-pool)
+	    :none)))
 (setf (gethash :eq primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2)
 	(if (equal car-params cdr-params)

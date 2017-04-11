@@ -174,6 +174,7 @@
     (com.libgirl.smcl::reduce-f body procedure *test-procedure-pool*)))
 
 
+
 ;; (test-apply-primitive-f (list :cdr (list :list-quote (list :list-quote :a :b) :c) :e) :two-params)
 
  (define-test test-apply-primitive-f
@@ -271,8 +272,33 @@
   (assert-equal (list :list-quote :c :a1)
 		(test-reduce-f-primitives (list :cdr (list :list-quote (list :list-quote :a :b) :c) :e)
 					  :two-params))
+  ;;when
+  (assert-equal :a2 (test-reduce-f-primitives :when :no-param))
+  (assert-equal :a2 (test-reduce-f-primitives :when :one-param))
+  (assert-equal :a2 (test-reduce-f-primitives :when :two-params))
+  (assert-equal :a1 (test-reduce-f-primitives (list :when :c) :two-params))
+  (assert-equal :d (test-reduce-f-primitives (list :when :c :d) :two-params))
   
-      
+  (assert-equal :e
+		(test-reduce-f-primitives (list :when (list :list-quote :c :d) :e)
+					  :two-params))
+  (assert-equal (list :list-quote :d :e)
+		(test-reduce-f-primitives (list :when :c (list :list-quote :d :e))
+					  :two-params))
+  (assert-equal (list :list-quote :e :f)
+		(test-reduce-f-primitives (list :when (list :list-quote :c :d) (list :list-quote :e :f))
+					  :two-params))
+  (assert-equal :e
+		(test-reduce-f-primitives (list :when (list :not-list-quote :c :d) :e)
+					  :two-params))
+  (assert-equal :not-list-quote
+		(test-reduce-f-primitives (list :when (list :not-list-quote :c :d) (list :not-list-quote :e :f))
+					  :two-params))
+  (assert-equal :e
+		(test-reduce-f-primitives (list :when (list :list-quote (list :list-quote :a :b) :c) :e)
+					  :two-params))
+  
+
   )
 
 

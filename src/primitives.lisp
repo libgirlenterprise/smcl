@@ -6,10 +6,10 @@
 (setf primitives (make-hash-table))
 ;;11 22 -> (LIST-QUOTE 11 22)
 (setf (gethash :list-quote primitives)
-      (lambda (car-params cdr-params default-arg-1 default-arg-2 procedure procedure-pool)
-	 (cons :list-quote (cons car-params cdr-params))))
+      (lambda (params)
+	(cons :list-quote params)))
 (setf (gethash :cons primitives)
-      (lambda (car-params cdr-params default-arg-1 default-arg-2)
+      (lambda (params)
 	(cons :list-quote (cons car-params cdr-params))))
 
 
@@ -21,7 +21,7 @@
 	(if (listp car-params)
 	    (if (equal (first car-params) :list-quote)
 		(second car-params)
-		(first car-params))
+		:not-yet)
 	    car-params)))
 
 
@@ -29,18 +29,18 @@
       (lambda (car-params cdr-params default-arg-1 default-arg-2) 
 	(if (listp car-params)
 	    (if (equal (first car-params) :list-quote)
-		(append (list :list-quote) (subseq car-params 2))
-		(append (list :list-quote) (subseq car-params 1)))
+		(third car-params)
+		:not-yet);return original form (:cdr (car-params cdr-params))
 	    :none)))		;if cdr a non-list-quote list, it will return :none
 
 (setf (gethash :when primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2 procedure procedure-pool)
-	(if (reduce-f (print car-params) procedure procedure-pool) ;Is :list-quote necessary here? No ;use our :true
+	(if (reduce-f car-params procedure procedure-pool) ;Is :list-quote necessary here? No ;use our :true
 	    (reduce-f (car cdr-params) procedure procedure-pool)
 	    :none)))
 (setf (gethash :eq primitives)
       (lambda (car-params cdr-params default-arg-1 default-arg-2)
-	(if (equal car-params cdr-params)
+	(if (equal car-params cdr-params); car cdr are different meaning, cannot compare
 	    :true
 	    :none)))
 (setf (gethash :atom primitives)
@@ -69,7 +69,7 @@
 	      (apply-primitive-f name (list body default-arg-1) (list default-arg-1 default-arg-2) procedure procedure-pool)
 	      ;; re-defun
 	      (let* ((procedure-ingredient-list (create-procedure-ingredient-list car-params-reduced default-arg-1 default-arg-2))
-	       	     (parameter-count (get-parameter-count procedure-ingredient-list))
+		     (parameter-count (get-parameter-count procedure-ingredient-list))
 		     (unprimitive-symbol-list (find-unprimitive-symbol body))
 		     (unprimitive-symbol-count (length unprimitive-symbol-list))
 		     (params nil))
@@ -160,15 +160,17 @@
   (or (equal procedure-name :list-quote)
       (equal procedure-name :when)
       (equal procedure-name :defun)))
-    
+
 (defun apply-primitive-f (primitive-name params default-args procedure procedure-pool)
   (format t "~%apply-primitive-f  ~s" primitive-name)
   (format t "~%  params: ~s~%  args: ~s" params default-args)
   (print (if (not (primitivep primitive-name))
-      (error "Apply Non-primitive Error")
-      (if (special-primitive-p primitive-name)
-	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
-	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args))))))
+	     (error "Apply Non-primitive Error")
+	     (if (equal primitive-name :defun)
+		 (funcall (gethash primitive-name primitives) params default-args procedure procedure-pool)
+		 (funcall (gethash primitive-name primitives) params)))))
+
+
 
 
 

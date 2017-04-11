@@ -1,11 +1,14 @@
 ;;;; TODO:
 ;;;; 1. exception handling
-;;;; 2. protection of var such as *interface-char* , *lock-reduction-p* from race condition
+;;;; 2. protection of var such as *interface-char* , *hand-to-api-p* from race condition
+;;;; 3. protection on thread termination
 
 (in-package :cl-user)
 (defpackage com.libgirl.smcl
   (:use :cl :iterate :alexandria)
-  (:export :smcl-thread-run))
+  (:export :smcl-thread-run :smcl-get-char
+	   :smcl-set-char :smcl-export
+	   :smcl-run-steps :smcl-thread-end))
 
 (in-package :com.libgirl.smcl)
 
@@ -13,10 +16,12 @@
 
 (defvar *interface-char* nil)
 
+(defvar *smcl-error* nil)
+
 (defvar *api-semaphore* (sb-thread:make-semaphore :name "Semaphore handling smcl and API control passing"
 						  :count 0))
 
-(defvar *lock-reduction-p* t)
+(defvar *hand-to-api-p* t)
 
 (defvar *smcl-thread* nil)
 
@@ -52,13 +57,14 @@
 			      (loop for symbol-char across symbol-string
 				    collect (progn
 					      (setf *interface-char* symbol-char)
-					      (loop while *lock-reduction-p*
+					      (setf *hand-to-api-p* t)
+					      (loop while *hand-to-api-p*
 						    do (progn
-							 (sb-thread:signal-semaphore *api-semaphore*)
+							 (sb-thread:signal-semaphore *api-semaphore* 1)
+							 (sb-thread:thread-yield)
 							 (sb-thread:wait-on-semaphore *api-semaphore*)
 							 (when *export-pathname*
-							   (export-to-file procedure-pool))))
-					      (setf *lock-reduction-p* t)
+							   (export-to-file *export-pathname* procedure-pool))))
 					      *interface-char*))))))
 
 (defmethod get-procedure (name (procedure-pool procedure-pool))
@@ -88,7 +94,8 @@
 		  (reduce-f (procedure-body procedure)
 			    procedure
 			    procedure-pool))
-	    name))))
+	    (user-interfere name
+			    procedure-pool)))))
 
 (defmethod reduce-f (body procedure &optional (procedure-pool procedure-pool))
   "Reduce the body to its simpliest form (perfect form)."

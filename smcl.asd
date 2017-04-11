@@ -6,7 +6,7 @@
 (in-package :com.libgirl.smcl-asd)
 
 (defsystem smcl
-  :depends-on (:iterate)
+  :depends-on (:iterate :alexandria)
   :components ((:module "src"
 		:serial t
 		:components ((:file "procedure-pool")

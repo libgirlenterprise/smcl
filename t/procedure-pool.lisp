@@ -5,8 +5,6 @@
   (:import-from :com.libgirl.smcl-test :*test-export-to-file-filepath*))
 (in-package :com.libgirl.smcl-test.procedure-pool)
 
-(defparameter *nil-function* (lambda () ())) ;TODO: make it a constant
-
 (defparameter *simple-case-data-size* 3)
 
 (defparameter *simple-case-data* (list (list :x :y :z)
@@ -17,7 +15,7 @@
 				       (list :y :z :v)))
 
 (defparameter *non-export-symbol-list* '("*ARG-SIZE*"
-					 "*USER-INPUT-FUNCTION*"
+					 "USER-IO-FUNCTION"
 					 "MAKE-USER-INPUT-FUNCTION"
 					 "PROCEDURE"
 					 "PROCEDURE-PARAMS"
@@ -37,10 +35,7 @@
 					  6
 					  12
 					  16
-					  1))
-
-(setf com.libgirl.smcl::*user-input-function*
-      *nil-function*)
+					  7))
 
 (defun run-program-for-make-user-input-function (input-stream)
   (sb-ext:run-program "/usr/local/bin/sbcl"
@@ -226,7 +221,24 @@
 	(progn
 	  (com.libgirl.smcl::export-to-file *test-export-to-file-filepath*
 					    cl-user::procedure-pool)
-	  (pass "file exported"))
+	  (with-open-file (file-stream (pathname *test-export-to-file-filepath*))
+	    (mapcar (lambda (got expected)
+		      (is-print (princ got)
+				(format nil
+					"~a"
+					expected)))
+		    (let ((procedure-read))
+		      (loop while (setf procedure-read
+					(read file-stream nil))
+			    collect (copy-tree procedure-read)))
+		    (mapcar #'list
+			    procedure-name-list
+			    procedure-param-list
+			    procedure-arg-list
+			    (let ((expected (copy-tree procedure-body-list)))
+			      (setf (first expected) :x1
+				    (third expected) (list :p1 :z1 :d))
+			      expected)))))
 	(fail (format nil
 		      "~a~%~a"
 		      "please set *test-export-to-file-filepath* in t/smcl-test-config.lisp ."

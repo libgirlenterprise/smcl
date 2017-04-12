@@ -33,7 +33,7 @@
 					  6
 					  6
 					  12
-					  16
+					  18
 					  7))
 
 (plan (length *subtest-number-list*))
@@ -218,7 +218,7 @@
 					:c)
 				  :p2
 				  :p1
-				  :p2
+				  (list :1 :p2)
 				  :d))
        (cl-user::procedure-pool))
   (make-test-thread (progn
@@ -242,21 +242,32 @@
 							      (com.libgirl.smcl::get-procedure :x
 											       cl-user::procedure-pool)
 							      cl-user::procedure-pool)
-				  :x1)))
+				  :x1)
+			    (list 'is
+				  (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :0
+																 cl-user::procedure-pool))
+							      (com.libgirl.smcl::get-procedure :0
+											       cl-user::procedure-pool)
+							      cl-user::procedure-pool)
+				  :1)))
     (run-smcl-steps-and-join-thread)
     (test-multiple-name-body-pairs procedure-name-list
 				   (let ((expected (copy-tree procedure-body-list)))
-				     (setf (first expected) (list :y :x1 :k)
-					   (third expected) (list :p1 :z1 :d))
+				     (setf (first expected)
+					   (list :y :x1 :k)) ; the sixth whose name is :0 remains (1 p2)
 				     expected)
 				   cl-user::procedure-pool)
     (make-test-thread (progn
 			(com.libgirl.smcl::reduce-f :x cl-user::procedure-pool)
+			(com.libgirl.smcl::reduce-f :0 cl-user::procedure-pool)
 			'(nil)))
     (run-smcl-steps-and-join-thread)
     (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :x
 									   cl-user::procedure-pool))
 	:x1)
+    (is (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :0
+									   cl-user::procedure-pool))
+	:1)
     (finalize))
 
   (subtest "test export-to-file"
@@ -281,7 +292,7 @@
 			    procedure-arg-list
 			    (let ((expected (copy-tree procedure-body-list)))
 			      (setf (first expected) :x1
-				    (third expected) (list :p1 :z1 :d))
+				    (sixth expected) :1)
 			      expected)))))
 	(fail (format nil
 		      "~a~%~a"

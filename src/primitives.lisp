@@ -4,56 +4,70 @@
 (defparameter primitives nil)
 
 (setf primitives (make-hash-table))
-;;11 22 -> (LIST-QUOTE 11 22)
+;; 11 22 -> (LIST-QUOTE 11 22)
 (setf (gethash :list-quote primitives)
-      (lambda (param-x param-y default-arg-1 default-arg-2)
-	(cons :list-quote (cons param-x param-y))))
+      (lambda (params)
+	(cons :list-quote params)))
 (setf (gethash :cons primitives)
-      (lambda (param-x param-y default-arg-1 default-arg-2)
-	(list :list-quote param-x param-y)))
-;;(:list-quote '11 '22) -> '11, that's just shaka wants
+      (lambda (params)
+	(cons :list-quote params)))
+;; (:list-quote '11 '22) -> '11, that's just shaka wants
+;; because car just use one param, so we choice the second one of that param
+;; but if the first one is the parameter of procedure, we should take it.
 (setf (gethash :car primitives)
-      (lambda (param-x param-y default-arg-1 default-arg-2)
-	 (if (listp param-x)
-			 (second param-x)
-			 param-x)))
+      (lambda (params)
+	(if (listp (first params))
+	    (if (equal (first (first params)) :list-quote)
+		(second (first params))
+		(cons :car params))
+	    params)))
+
+
 (setf (gethash :cdr primitives)
-      (lambda (param-x param-y default-arg-1 default-arg-2) 
-	 (if (listp param-x)
-			 (subseq param-x 1) ;not (cdr (second param-x))??
-			 :none)))
+      (lambda (params) 
+	(if (listp (first params))
+	    (if (equal (first (first params)) :list-quote)
+		(third (first params))
+		(cons :cdr params))     ; return original form
+	    :none)))	        	; if cdr a non-list-quote list, it will return :none
 (setf (gethash :when primitives)
-      (lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
-	(list :list-quote (if (reduce-f param-x procedure procedure-pool) ;Is :list-quote necessary here? No
-			      (reduce-f param-y procedure procedure-pool)))))
-(setf (gethash :eq primitives)
-      (lambda (param-x param-y default-arg-1 default-arg-2)
-	(if (equal param-x param-y)
+      (lambda (params default-args procedure procedure-pool)
+	(if (not (equal :none
+			(reduce-f (first params) procedure  procedure-pool)))  ;use our :true?? yes, but not :none is :true
+	    (reduce-f (second params) procedure procedure-pool)
+	    :none)))
+(setf (gethash :eq primitives)		
+      (lambda (params)
+	(if (equal (first params) (second params)) 
 	    :true
 	    :none)))
 (setf (gethash :atom primitives)
-      (lambda (param-x param-y default-arg-1 default-arg-2)
-	(if (not (listp param-x))
+      (lambda (params)
+	(if (not (listp (first params)))
 	    :true
-	    :none)))
-(setf (gethash :true primitives) :true)
-(setf (gethash :none primitives) :none)
+	    :none))) 
+(setf (gethash :true primitives)
+      (lambda (params)
+	:true))
+(setf (gethash :none primitives)
+      (lambda (params)
+	:none))
 (setf (gethash :defun primitives)
-      (lambda (param-x param-y default-arg-1 default-arg-2 procedure procedure-pool)
-	(let* ((param-a (reduce-f param-x procedure procedure-pool))
-	       (name (if (listp param-a)
-			 (if (listp (second param-a))
-			     (first (second param-a))
-			     (second param-a))
-			 param-a))
-	       (body param-y)
+      (lambda (car-params cdr-params default-arg-1 default-arg-2 procedure procedure-pool)
+	(let* ((car-params-reduced (reduce-f car-params procedure procedure-pool))
+	       (name (if (listp car-params-reduced)
+			 (if (listp (second car-params-reduced))
+			     (first (second car-params-reduced))
+			     (second car-params-reduced))
+			 car-params-reduced))
+	       (body cdr-params)
 	       )
 	  (if (primitivep name)
 	      ;; apply directly
 	      (apply-primitive-f name (list body default-arg-1) (list default-arg-1 default-arg-2) procedure procedure-pool)
 	      ;; re-defun
-	      (let* ((procedure-ingredient-list (create-procedure-ingredient-list param-a default-arg-1 default-arg-2))
-	       	     (parameter-count (get-parameter-count procedure-ingredient-list))
+	      (let* ((procedure-ingredient-list (create-procedure-ingredient-list car-params-reduced default-arg-1 default-arg-2))
+		     (parameter-count (get-parameter-count procedure-ingredient-list))
 		     (unprimitive-symbol-list (find-unprimitive-symbol body))
 		     (unprimitive-symbol-count (length unprimitive-symbol-list))
 		     (params nil))
@@ -66,9 +80,9 @@
 		name)))))
 
 ;;retun a cons list
-(defun create-procedure-ingredient-list (param-a default-arg-1 default-arg-2)
+(defun create-procedure-ingredient-list (car-params-reduced default-arg-1 default-arg-2)
   (let ((default-param-args (list :name :no-param default-arg-1 :no-param default-arg-2))
-	(flated-a (flate-param param-a)))
+	(flated-a (flate-param car-params-reduced)))
     (labels ((compose-list (flated-a param-args)
 	       (if (and flated-a param-args)
 		   (append (list (car flated-a)) (compose-list (cdr flated-a) (cdr param-args)))
@@ -143,19 +157,19 @@
 (defun special-primitive-p (procedure-name)
   (find procedure-name
 	'(:when :defun :list-quote)))
-    
-(defun apply-primitive-f (primitive-name params default-args procedure procedure-pool)
-  (if (not (primitivep primitive-name))
-      (error "Apply Non-primitive Error")
-      (if (special-primitive-p primitive-name)
-	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args) procedure procedure-pool)
-	  (funcall (gethash primitive-name primitives) (car params) (cdr params) (car default-args) (cdr default-args)))))
 
-;; (let ((list-one (list 1 2 3 4)))
-;;   (let ((list-let-list list-one))
-;;     (delete 2 list-one)
-;;     (print list-one)
-;;     (print list-let-list)))
+(defun apply-primitive-f (primitive-name params default-args procedure procedure-pool)
+  (format t "~%apply-primitive-f  ~s" primitive-name)
+  (format t "~%  params: ~s~%  args: ~s" params default-args)
+  (print (if (not (primitivep primitive-name))
+	     (error "Apply Non-primitive Error")
+	     (if (or (equal primitive-name :defun)
+		     (equal primitive-name :when))
+		 (funcall (gethash primitive-name primitives) params default-args procedure procedure-pool)
+		 (funcall (gethash primitive-name primitives) params)))))
+
+
+
 
 
 

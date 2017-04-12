@@ -64,7 +64,8 @@
 							 (sb-thread:thread-yield)
 							 (sb-thread:wait-on-semaphore *api-semaphore*)
 							 (when *export-pathname*
-							   (export-to-file *export-pathname* procedure-pool))))
+							   (export-to-file *export-pathname* procedure-pool)
+							   (setf *export-pathname* nil))))
 					      *interface-char*))))))
 
 (defmethod get-procedure (name (procedure-pool procedure-pool))

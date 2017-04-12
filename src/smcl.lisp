@@ -52,5 +52,8 @@
 			 (error "output file pathname null"))))
 
 (defun smcl-thread-end ()
-  (sb-thread:terminate-thread *smcl-thread*))
+  (sb-thread:interrupt-thread *smcl-thread*
+			      (lambda ()
+				(print (sb-thread:return-from-thread "smcl thread terminated by smcl-thread-end"))))
+  (sb-thread:join-thread *smcl-thread* :timeout 5))
 

@@ -141,8 +141,8 @@
 
 
 (defun special-primitive-p (procedure-name)
-  (or (equal procedure-name :when)
-      (equal procedure-name :defun)))
+  (find procedure-name
+	'(:when :defun :list-quote)))
     
 (defun apply-primitive-f (primitive-name params default-args procedure procedure-pool)
   (if (not (primitivep primitive-name))

@@ -14,13 +14,14 @@
 											     nil
 											     (list :a1 :a2)
 											     (list :list-quote :x :y))))))
-		    (is (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :a
-														       cl-user::procedure-pool))
-						    (com.libgirl.smcl::get-procedure :a cl-user::procedure-pool)
-						    cl-user::procedure-pool)
-			(list :list-quote :x :y)
-			:test #'equalp)))
-
+		    (list (list 'is
+				(cons 'list
+				      (com.libgirl.smcl::reduce-f (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure :a
+																     cl-user::procedure-pool))
+								  (com.libgirl.smcl::get-procedure :a cl-user::procedure-pool)
+								  cl-user::procedure-pool))
+				'(list :list-quote :x :y)
+				:test #'equalp))))
 (run-smcl-steps-and-join-thread)
 (finalize)
 

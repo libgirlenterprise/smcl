@@ -581,6 +581,31 @@
   (assert-equal :not-list-quote
 		(test-reduce-f-defun (list :defun :a (list :not-list-quote :b :c))
 				     :one-param))
+  ;; defun atom, list-quote list,non-list-quote list with two-params
+  (assert-equal :a2
+		(test-reduce-f-defun :defun :two-params))
+  (assert-equal :a1
+		(test-reduce-f-defun (list :defun :a) :two-params))
+  (assert-equal :b
+		(test-reduce-f-defun (list :defun :a :b) :two-params))
+  (assert-equal :a1
+		(test-reduce-f-defun (list :defun (list :list-quote :a :b))
+				     :two-params))
+  (assert-equal :a1			;this a1 is from defun-procedure's default arg
+		(test-reduce-f-defun (list :defun (list :list-quote :a :b) :c)
+				     :two-params))
+  (assert-equal (list :list-quote :b :c)
+		(test-reduce-f-defun (list :defun :a (list :list-quote :b :c))
+				     :two-params))
+  (assert-equal :a1
+		(test-reduce-f-defun (list :defun (list :not-list-quote :a :b))
+				     :two-params))
+  (assert-equal :c			
+		(test-reduce-f-defun (list :defun (list :not-list-quote :a :b) :c)
+				     :two-params))
+  (assert-equal :not-list-quote
+		(test-reduce-f-defun (list :defun :a (list :not-list-quote :b :c))
+				     :two-params))
   
   )
 

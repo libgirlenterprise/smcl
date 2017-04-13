@@ -85,11 +85,12 @@
 			(format t "~%parameter-count: ~s, unprimitive-symbol-count: ~s~%" parameter-count (length unprimitive-symbol-list))
 			(if (or (= parameter-count 0) (= (length unprimitive-symbol-list) 0))
 			    (progn
-			      (format t "  set procedure directly~%  procedure name: ~s~%  procedutr body: ~s~%" name body)
+			      (format t "set-procedure~%  name: ~s~%  params: nil~%  args: ~s~%  body: ~s~%" name default-args body)
 			      (set-procedure name nil (copy-tree default-args) (copy-tree body) procedure-pool))
 			    (let ((params (match-params-and-unprimitive-symbols procedure-ingredient-list
 										unprimitive-symbol-list))
 				  (args (list (third procedure-ingredient-list) (fifth procedure-ingredient-list))))
+			      (format t "set-procedure~%  name: ~s~%  params: ~s~%  args: ~s~%  body: ~s~%" name params args body)
 			      (set-procedure name (copy-tree params) (copy-tree args) (copy-tree body) procedure-pool)))
 			name)
 		      (cons :defun params)))))))) ; If first-param-reduced contains not-list-quote list, return (:defun params)
@@ -130,7 +131,7 @@
      (2 0))))
 
 (defun find-unprimitive-symbol (body)
-  (format t "~%find unprimitive symbol: ~s~%  " body)
+  (format t "~%find unprimitive symbol from body: ~s~%  " body)
   (princ (labels ((recursive-find-unprimitive-symbol (body) 
 	     (let ((body-list (if (atom body)
 				  (list body)
@@ -147,7 +148,7 @@
 
 
 (defun parse-symbol-to-number (symbol)
-  (format t "~%Parse symbol to number~%  ")
+  (format t "~%  parse symbol to number~%  ")
   (princ
    (let ((sha1output (make-string-output-stream))
 	 (aa (make-string-input-stream (symbol-name symbol))))
@@ -159,25 +160,27 @@
 
 
 (defun match-params-and-unprimitive-symbols (procedure-ingredient-list unprimitive-symbol-list)
-  (format t "match params and unprimitive symbols")
-  (cond ((equal nil (second procedure-ingredient-list))
-	 (error "second parameter in procedure-ingredient-list should not be :none"))
+  (format t "match params and unprimitive symbols~%  procedure-ingredient-list: ~s~%  unprimitive-symbol-list: ~s" procedure-ingredient-list unprimitive-symbol-list)
+  (cond ((not (second procedure-ingredient-list))
+	 (error "second parameter in procedure-ingredient-list should not be nil. Because if second parameter is nil, it should be directly set-procedure"))
 	((= (length unprimitive-symbol-list) 0)
 	 (error "unprimitive-symbol-list should not be 0"))
 	(t (let ((params (append (list (second procedure-ingredient-list)) 
 				 (if (fourth procedure-ingredient-list)
 				     (list (fourth procedure-ingredient-list))))))
+	     (format t "~%  params in new procedure: ~s" params)
 	     (labels ((match-them (params unprimitive-symbol-list)
-			(if (and (car params) (car unprimitive-symbol-list)) 
-			    (cons (nth (mod (parse-symbol-to-number (car params)) (length unprimitive-symbol-list))
-				       unprimitive-symbol-list)
-				  (match-them (cdr params) (remove (nth (mod (parse-symbol-to-number (car params))
-									     (length unprimitive-symbol-list))
-									unprimitive-symbol-list)
-								   unprimitive-symbol-list)))
+			(if (and (car params) (car unprimitive-symbol-list))
+			    (let ((parameter-choiced (nth (mod (parse-symbol-to-number (car params))
+							       (length unprimitive-symbol-list))
+							  unprimitive-symbol-list)))
+			      (cons parameter-choiced
+				    (match-them (cdr params) (remove parameter-choiced
+								     unprimitive-symbol-list))))
 			    nil)))
-	       (match-them params unprimitive-symbol-list))))))
-
+	       (let ((parameter-choiced-list (match-them params unprimitive-symbol-list)))
+		 (format t "~%  ~s~%" parameter-choiced-list)
+		 parameter-choiced-list))))))
 
 
 

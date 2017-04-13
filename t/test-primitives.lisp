@@ -490,7 +490,72 @@
 
   )
 
+(defun test-reduce-f-defun (body procedure-name)
+  (format t "~%~%---~s---" body)
+  (let* ((procedure-name-list (list :no-param
+				    :one-param
+				    :two-params)) 
+	 (procedure-param-list (list nil
+				     (list :p1)
+				     (list :p1 :p2)))
+	 (procedure-arg-list (mapcar (lambda (raw-list)
+				       (append raw-list
+					       (make-list (- com.libgirl.smcl::*arg-size*
+							     (length raw-list))
+							  :initial-element :0)))
+				     (list (list :a1 :a2)
+					   (list :a1 :a2)
+					   (list :a1 :a2))))
+	 (procedure-body-list (list (list :list-quote :xx :yy)
+				    (list :list-quote :xx :yy)
+				    (list :list-quote :xx :yy)))
+	 (defun-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
+						       :init-procedures (mapcar #'list
+										procedure-name-list
+										procedure-param-list
+										procedure-arg-list
+										procedure-body-list)))
+	 (defun-procedure (progn
+			    (format t "~%procedure~%")
+			    (format t "  name : ~s~%" procedure-name)
+			    (format t "  params: ")
+			    (princ (com.libgirl.smcl::procedure-params (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool)))
+			    (format t "~%  arge : ")
+			    (princ (com.libgirl.smcl::procedure-args (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool)))
+			    (format t "~%  body : ")
+			    (princ (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool)))
+			    (format t "~%")
+			    (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool))))
+    (com.libgirl.smcl::reduce-f body defun-procedure defun-procedure-pool)))
+
+ 
+  
 (define-test test-defun
+  ;; defun atom, list-quote list,non-list-quote list with no-param
+  (assert-equal :a2
+		(test-reduce-f-defun :defun :no-param))
+  (assert-equal :a1
+		(test-reduce-f-defun (list :defun :a) :no-param))
+  (assert-equal :b
+		(test-reduce-f-defun (list :defun :a :b) :no-param))
+  (assert-equal :a1
+		(test-reduce-f-defun (list :defun (list :list-quote :a :b))
+				     :no-param))
+  (assert-equal :a1			;this a1 is from defun-procedure's default arg
+		(test-reduce-f-defun (list :defun (list :list-quote :a :b) :c)
+				     :no-param))
+  (assert-equal (list :list-quote :b :c)
+		(test-reduce-f-defun (list :defun :a (list :list-quote :b :c))
+				     :no-param))
+  (assert-equal :a1
+		(test-reduce-f-defun (list :defun (list :not-list-quote :a :b))
+				     :no-param))
+  (assert-equal :c			
+		(test-reduce-f-defun (list :defun (list :not-list-quote :a :b) :c)
+				     :no-param))
+  (assert-equal :not-list-quote
+		(test-reduce-f-defun (list :defun :a (list :not-list-quote :b :c))
+				     :no-param))
   
   )
 

@@ -52,8 +52,8 @@
 (setf (gethash :none primitives)
       (lambda (params)
 	:none))
+(find nil (list 'a 'b))
 
-(format t "dddd")
 (setf (gethash :defun primitives)
       (lambda (params default-args procedure procedure-pool)
 	(format t "~%DEFUN START~%")
@@ -61,27 +61,58 @@
 	  (let* ((first-param-reduced (progn
 					(format t "reduce first-param: ~s~%  " (first params))
 					(princ (reduce-f (first params) procedure procedure-pool))))
-		 (name (labels ((find-name (first-param-reduced params)
-				  (if (listp first-param-reduced) ; find name recursive
-				      (if (equal (first first-param-reduced) :list-quote)
-					  (if (second first-param-reduced)
-					      (find-name (second first-param-reduced) params)
-					      (error ":defun Find name problem: (second first-param-reduce) is nil but is list"))
-					  (return-from defun-block (cons :defun params)))
-				      first-param-reduced)))
-			 (format t "~%find-name: ~s~%  " first-param-reduced)			 
-			 (princ (find-name first-param-reduced params))))
-		 (body (second params)))
+		 (name (labels
+			   ((find-procedure-param (param-reduced)
+			      (if (atom param-reduced)
+				  (when (find param-reduced (procedure-params procedure))
+				    (progn
+				      (format t "~%find first-param-reduced contains ~s, is parameter in procedure-params: ~s~%  return ~s~%"
+					      param-reduced
+					      (procedure-params procedure)
+					      (return-from defun-block (cons :defun
+									     (list first-param-reduced (second params)))))
+				      (return-from defun-block (cons :defun
+								     (list first-param-reduced (second params))))))
+				  (progn
+				    (find-procedure-param (car param-reduced))
+				    (find-procedure-param (cdr param-reduced)))))
+			    
+			    (find-name (first-param-reduced params) 
+			      (if (listp first-param-reduced) ; find name recursive
+				  (if (equalp (first first-param-reduced) :list-quote)
+				      (if (second first-param-reduced)
+					  (find-name (second first-param-reduced) params)
+					  (error ":defun Find name problem: (second first-param-reduced) is nil but is list"))
+				      (return-from defun-block (cons :defun
+								     (list first-param-reduced (second params)))))
+				  (if (find first-param-reduced (procedure-params procedure))
+				      (progn
+					(format t "~%first-param-reduce is not a list and have the same parameter in procedure-params: ~s~%  return ~s~%" (procedure-params procedure)
+						(cons :defun (list first-param-reduced (second params)))) 
+					(return-from defun-block (cons :defun
+								       (list first-param-reduced (second params)))))
+				      first-param-reduced))))
+			 (format t "~%find-procedure-param: ~s~%  " first-param-reduced)
+			 (find-procedure-param first-param-reduced)
+			 (format t "~%find-name~%")
+			 (find-name first-param-reduced params)))
+		 (body (second params))) ;;if body contain parameter in procedure, return (:defun params)
 	    (if (primitivep name)
 		;; apply directly
 		(apply-primitive-f name (list body (first default-args)) default-args procedure procedure-pool)
 		;; re-defun
 		(let* ((procedure-ingredient-list (create-procedure-ingredient-list first-param-reduced default-args))
 		       (parameter-count (get-parameter-count procedure-ingredient-list))
-		       (unprimitive-symbol-list (find-unprimitive-symbol body))
-		       (params nil))
+		       (unprimitive-symbol-list (find-unprimitive-symbol body (procedure-params procedure)))
+		       (new-params nil))
 		  (if procedure-ingredient-list
 		      (progn
+			(unless (listp (print unprimitive-symbol-list))
+			  (progn
+			    (format t "~%find procedure parameter in unprimitive-symbol-list~%  return ~s" (cons :defun
+														 (list first-param-reduced (second params)))) 
+			    (return-from defun-block (cons :defun
+							   (list first-param-reduced (second params))))))
 			(format t "~%parameter-count: ~s, unprimitive-symbol-count: ~s~%" parameter-count (length unprimitive-symbol-list))
 			(if (or (= parameter-count 0) (= (length unprimitive-symbol-list) 0))
 			    (progn
@@ -130,19 +161,22 @@
      (1 1)
      (2 0))))
 
-(defun find-unprimitive-symbol (body)
+(defun find-unprimitive-symbol (body procedure-params)
   (format t "~%find unprimitive symbol from body: ~s~%  " body)
-  (princ (labels ((recursive-find-unprimitive-symbol (body) 
-	     (let ((body-list (if (atom body)
-				  (list body)
-				  body)))
-	       (labels ((adjoin-list (body-list)
-			  (iter (for item in body-list)
-			    (if (atom item)
-				(if (not (primitivep item))
-				    (adjoining item))
-				(unioning (adjoin-list item))))))
-		 (adjoin-list body-list)))))
+  (princ (labels ((recursive-find-unprimitive-symbol (body)
+		    (print body)
+		    (let ((body-list (if (atom body)
+					 (list body)
+					 body)))
+		      (labels ((adjoin-list (body-list)
+				 (iter (for item in body-list)
+				   (if (atom item)
+				       (if (find item (print procedure-params))
+					   (return-from find-unprimitive-symbol t)
+					   (if (not (primitivep item))
+					       (adjoining item)))
+				       (unioning (adjoin-list item))))))
+			(adjoin-list body-list)))))
     (recursive-find-unprimitive-symbol body))))
 
 

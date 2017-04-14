@@ -144,8 +144,12 @@
 						 procedure))
 					 (list procedure-pool)))))
 	    (if (equalp body new-body)
-		body
-		(reduce-f new-body procedure procedure-pool)))))))
+		(progn
+		  (format t "~%body equal new-body~%  ") 
+		  (princ body))
+		(progn
+		  (format t "~%old body: ~s, new-body: ~s are not equal~%  reuce-f new-body~%" body new-body new-body)
+		  (reduce-f new-body procedure procedure-pool))))))))
 
 (defmethod invoke-f (symbol args (procedure-pool procedure-pool))
   (let* ((procedure (get-procedure symbol procedure-pool)))

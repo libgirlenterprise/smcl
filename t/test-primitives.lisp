@@ -1,9 +1,27 @@
 ;; use lisp-unit
 
+(defmacro make-test-thread (thread-form)
+  `(progn (setf com.libgirl.smcl::*smcl-thread*
+		(sb-thread:make-thread (lambda (standard-output)
+					 (let* ((*standard-output* standard-output)
+						(test-form-list ,thread-form))
+					   (setf com.libgirl.smcl::*hand-to-api-p* t)
+					   (sb-thread:signal-semaphore com.libgirl.smcl::*api-semaphore* 1)
+					   (sb-thread:return-from-thread test-form-list)))
+				       :arguments (list *standard-output*)))
+	  (sb-thread:thread-yield)
+					;	  (print (sb-thread:semaphore-count com.libgirl.smcl::*api-semaphore*))
+	  (sb-thread:wait-on-semaphore com.libgirl.smcl::*api-semaphore*)))
 
+(defun run-smcl-steps-and-join-thread()
+  (let ((test-form-list))
+    (loop until (setf test-form-list
+		      (sb-thread:join-thread com.libgirl.smcl::*smcl-thread*
+					     :default nil
+					     :timeout 0.001))
+	  do (smcl-run-steps))
+    (mapcar #'eval test-form-list)))
 
-(setf com.libgirl.smcl::*user-input-function*
-      (lambda () ()))
 
 (defparameter *symbol-a* :a)
 (defparameter *list-a* (list :a))
@@ -70,29 +88,32 @@
   (assert-equal 1 (com.libgirl.smcl::get-parameter-count (list :a :b :c nil :arg2)))
   (assert-equal 0 (com.libgirl.smcl::get-parameter-count (list :a nil :arg1 nil :arg2))))
 
-(define-test test-find-unprimitve-symbol
-  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol :list-quote))
-  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol :cons))
-  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol :car))
-  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol :cdr))
-  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol :eq))
-  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol :atom))
-  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol :true))
-  (assert-equal nil (com.libgirl.smcl::find-unprimitive-symbol :none))
-  (assert-equal (list :a) (com.libgirl.smcl::find-unprimitive-symbol :a))
-  (assert-equal (list :a) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote :a)))
-  (assert-equal nil  (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote :cons :car)))
-  (assert-equal (list :a) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote (list :list-quote :car :cons) :a)))
-  (assert-equal (list :a :b) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote (list :list-quote :a :cons) :b)))
-  (assert-equal (list :a :b) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote (list :list-quote :true :a) :b)))
-  (assert-equal (list :a :b) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote (list :list-quote :a :b) :atom)))
-  (assert-equal (list :a :b :c) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote (list :list-quote :a :b) :c)))
+(defun find-unprimitive-symbol (body)
+  (com.libgirl.smcl::find-unprimitive-symbol body (list :p1 :p2)))
 
-  (assert-equal (list :a) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote :a (list :list-quote :car :cons))))
-  (assert-equal (list :a :b) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote :a (list :list-quote :b :cons))))
-  (assert-equal (list :a :b) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote :a (list :list-quote :true :b))))
-  (assert-equal (list :a :b) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote :none (list :list-quote :a :b))))
-  (assert-equal (list :a :b :c) (com.libgirl.smcl::find-unprimitive-symbol (list :list-quote :a (list :list-quote :b :c)))))
+(define-test test-find-unprimitve-symbol
+  (assert-equal nil (find-unprimitive-symbol :list-quote))
+  (assert-equal nil (find-unprimitive-symbol :cons))
+  (assert-equal nil (find-unprimitive-symbol :car))
+  (assert-equal nil (find-unprimitive-symbol :cdr))
+  (assert-equal nil (find-unprimitive-symbol :eq))
+  (assert-equal nil (find-unprimitive-symbol :atom))
+  (assert-equal nil (find-unprimitive-symbol :true))
+  (assert-equal nil (find-unprimitive-symbol :none))
+  (assert-equal (list :a) (find-unprimitive-symbol :a))
+  (assert-equal (list :a) (find-unprimitive-symbol (list :list-quote :a)))
+  (assert-equal nil  (find-unprimitive-symbol (list :list-quote :cons :car)))
+  (assert-equal (list :a) (find-unprimitive-symbol (list :list-quote (list :list-quote :car :cons) :a)))
+  (assert-equal (list :a :b) (find-unprimitive-symbol (list :list-quote (list :list-quote :a :cons) :b)))
+  (assert-equal (list :a :b) (find-unprimitive-symbol (list :list-quote (list :list-quote :true :a) :b)))
+  (assert-equal (list :a :b) (find-unprimitive-symbol (list :list-quote (list :list-quote :a :b) :atom)))
+  (assert-equal (list :a :b :c) (find-unprimitive-symbol (list :list-quote (list :list-quote :a :b) :c)))
+
+  (assert-equal (list :a) (find-unprimitive-symbol (list :list-quote :a (list :list-quote :car :cons))))
+  (assert-equal (list :a :b) (find-unprimitive-symbol (list :list-quote :a (list :list-quote :b :cons))))
+  (assert-equal (list :a :b) (find-unprimitive-symbol (list :list-quote :a (list :list-quote :true :b))))
+  (assert-equal (list :a :b) (find-unprimitive-symbol (list :list-quote :none (list :list-quote :a :b))))
+  (assert-equal (list :a :b :c) (find-unprimitive-symbol (list :list-quote :a (list :list-quote :b :c)))))
 
 ;; (define-test test-parse-symbol-to-number
 ;;   (assert-equal (com.libgirl.smcl::parse-symbol-to-number :list-quote)
@@ -119,31 +140,37 @@
 
 
 (defparameter *test-procedure-pool*
-  (let* ((procedure-name-list (list :no-param
-				    :one-param
-				    :two-params)) 
-	 (procedure-param-list (list nil
-				     (list :p1)
-				     (list :p1 :p2)))
-	 (procedure-arg-list (mapcar (lambda (raw-list)
-				       (append raw-list
-					       (make-list (- com.libgirl.smcl::*arg-size*
-							     (length raw-list))
-							  :initial-element :0)))
-				     (list (list :a1 :a2)
-					   (list :a1 :a2)
-					   (list :a1 :a2))))
-	 (procedure-body-list (list (list :list-quote :xx :yy)
-				    (list :list-quote :xx :yy)
-				    (list :list-quote :xx :yy)))
-	 (cl-user::procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
-						 :init-procedures (mapcar #'list
-									  procedure-name-list
-									  procedure-param-list
-									  procedure-arg-list
-									  procedure-body-list))))
-    cl-user::procedure-pool
-    ))
+  (progn
+    (let ((cl-user::procedure-pool nil))
+      (make-test-thread (let* ((procedure-name-list (list :no-param
+							  :one-param
+							  :two-params)) 
+			       (procedure-param-list (list nil
+							   (list :p1)
+							   (list :p1 :p2)))
+			       (procedure-arg-list (mapcar (lambda (raw-list)
+							     (append raw-list
+								     (make-list (- com.libgirl.smcl::*arg-size*
+										   (length raw-list))
+										:initial-element :0)))
+							   (list (list :a1 :a2)
+								 (list :a1 :a2)
+								 (list :a1 :a2))))
+			       (procedure-body-list (list (list :list-quote :xx :yy)
+							  (list :list-quote :xx :yy)
+							  (list :list-quote :xx :yy)))
+			       (procedure-pool-instance (make-instance 'com.libgirl.smcl::procedure-pool
+								       :init-procedures (mapcar #'list
+												procedure-name-list
+												procedure-param-list
+												procedure-arg-list
+												procedure-body-list))))
+			  
+			  (setf cl-user::procedure-pool procedure-pool-instance)
+			  '(nil)))
+      (run-smcl-steps-and-join-thread)
+      cl-user::procedure-pool)))
+    
 
 
 
@@ -175,8 +202,13 @@
 					 *test-procedure-pool*)))
 (defun test-reduce-f-primitives (body procedure-name)
   (format t "~%~%---~s---" body)
-  (let* ((procedure (get-proc procedure-name)))
-    (com.libgirl.smcl::reduce-f body procedure *test-procedure-pool*)))
+  (format t "~s" *test-procedure-pool*)
+  (let ((result nil))
+    (make-test-thread (let* ((procedure (get-proc procedure-name)))
+			(setf result (com.libgirl.smcl::reduce-f body procedure *test-procedure-pool*))
+			'(nil)))
+    (run-smcl-steps-and-join-thread)
+    result))
 
 
 
@@ -492,42 +524,48 @@
 
 (defun test-reduce-f-defun (body procedure-name)
   (format t "~%~%---~s---" body)
-  (let* ((procedure-name-list (list :no-param
-				    :one-param
-				    :two-params)) 
-	 (procedure-param-list (list nil
-				     (list :p1)
-				     (list :p1 :p2)))
-	 (procedure-arg-list (mapcar (lambda (raw-list)
-				       (append raw-list
-					       (make-list (- com.libgirl.smcl::*arg-size*
-							     (length raw-list))
-							  :initial-element :0)))
-				     (list (list :a1 :a2)
-					   (list :a1 :a2)
-					   (list :a1 :a2))))
-	 (procedure-body-list (list (list :list-quote :xx :yy)
-				    (list :list-quote :xx :yy)
-				    (list :list-quote :xx :yy)))
-	 (defun-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
-						       :init-procedures (mapcar #'list
-										procedure-name-list
-										procedure-param-list
-										procedure-arg-list
-										procedure-body-list)))
-	 (defun-procedure (progn
-			    (format t "~%procedure~%")
-			    (format t "  name : ~s~%" procedure-name)
-			    (format t "  params: ")
-			    (princ (com.libgirl.smcl::procedure-params (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool)))
-			    (format t "~%  arge : ")
-			    (princ (com.libgirl.smcl::procedure-args (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool)))
-			    (format t "~%  body : ")
-			    (princ (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool)))
-			    (format t "~%")
-			    (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool))))
-    (com.libgirl.smcl::reduce-f body defun-procedure defun-procedure-pool)))
+  (let ((result nil))
+    (make-test-thread (let* ((procedure-name-list (list :no-param
+							:one-param
+							:two-params)) 
+			     (procedure-param-list (list nil
+							 (list :p1)
+							 (list :p1 :p2)))
+			     (procedure-arg-list (mapcar (lambda (raw-list)
+							   (append raw-list
+								   (make-list (- com.libgirl.smcl::*arg-size*
+										 (length raw-list))
+									      :initial-element :0)))
+							 (list (list :a1 :a2)
+							       (list :a1 :a2)
+							       (list :a1 :a2))))
+			     (procedure-body-list (list (list :list-quote :xx :yy)
+							(list :list-quote :xx :yy)
+							(list :list-quote :xx :yy)))
+			     (defun-procedure-pool (make-instance 'com.libgirl.smcl::procedure-pool
+								  :init-procedures (mapcar #'list
+											   procedure-name-list
+											   procedure-param-list
+											   procedure-arg-list
+											   procedure-body-list)))
+			     (defun-procedure
+			       (progn
+				 (format t "~%procedure~%")
+				 (format t "  name : ~s~%" procedure-name)
+				 (format t "  params: ")
+				 (princ (com.libgirl.smcl::procedure-params (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool)))
+				 (format t "~%  arge : ")
+				 (princ (com.libgirl.smcl::procedure-args (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool)))
+				 (format t "~%  body : ")
+				 (princ (com.libgirl.smcl::procedure-body (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool)))
+				 (format t "~%")
+				 (com.libgirl.smcl::get-procedure procedure-name defun-procedure-pool))))
+			(setf result (com.libgirl.smcl::reduce-f body defun-procedure defun-procedure-pool))
+			'(nil)))
+    (run-smcl-steps-and-join-thread)
+    result))
 
+(test-reduce-f-defun (list :defun :p1) :one-param)
  
   
 (define-test test-defun
@@ -589,7 +627,7 @@
   (assert-equal :b
 		(test-reduce-f-defun (list :defun :a :b) :two-params))
   (assert-equal :a1
-		(test-reduce-f-defun (list :defun (list :list-quote :a :b))
+		(test-reduce-f-defun (list :defun (list :a :p1 :b))
 				     :two-params))
   (assert-equal :a1			;this a1 is from defun-procedure's default arg
 		(test-reduce-f-defun (list :defun (list :list-quote :a :b) :c)
@@ -606,9 +644,49 @@
   (assert-equal :not-list-quote
 		(test-reduce-f-defun (list :defun :a (list :not-list-quote :b :c))
 				     :two-params))
+  ;;  defun contain p
+  (assert-equal (list :defun :p1 :a1)
+  		(test-reduce-f-defun (list :defun :p1) :one-param))
+  (assert-equal (list :defun :p1 :a)
+  		(test-reduce-f-defun (list :defun :p1 :a) :one-param))
+  (assert-equal (list :defun :a :p1)
+  		(test-reduce-f-defun (list :defun :a :p1) :one-param))
+  (assert-equal (list :defun :a :p1)
+  		(test-reduce-f-defun (list :defun (list :a :b) :p1) :one-param))
   
-  )
+  (assert-equal (list :defun :p1 (list :a :b))
+  		(test-reduce-f-defun (list :defun :p1 (list :a :b)) :one-param))
 
+  
+  (assert-equal (list :defun (list :list-quote :a :p1) :a1)
+  		(test-reduce-f-defun (list :defun (list :list-quote :a :p1))
+  				     :one-param))
+  (assert-equal (list :defun (list :list-quote :p1 :a) :a1)
+  		(test-reduce-f-defun (list :defun (list :list-quote :p1 :a))
+  				     :one-param))
+  (assert-equal (list :defun (list :list-quote :a :b) :p1)	
+   		(test-reduce-f-defun (list :defun (list :list-quote :a :b) :p1)
+   				     :one-param))
+  (assert-equal (list :defun :p1 (list :list-quote :b :c))
+  		(test-reduce-f-defun (list :defun :p1 (list :list-quote :b :c))
+  				     :one-param))
+  (assert-equal (list :defun (list :p1 :a :b) :a1)
+   		(test-reduce-f-defun (list :defun (list :p1 :a :b))
+   				     :one-param))
+  (assert-equal (list :defun (list :a :p1 :b) :a1)
+   		(test-reduce-f-defun (list :defun (list :a :p1 :b))
+   				     :one-param))
+  (assert-equal (list :defun (list :not-list-quote :a :p1))
+   		(test-reduce-f-defun (list :defun (list :not-list-quote :a :p1))
+   				     :one-param))
+  (assert-equal (list :defun :not-list-quote :p1)			
+   		(test-reduce-f-defun (list :defun (list :not-list-quote :a :b) :p1)
+   				     :one-param))
+  (assert-equal (list :defun :p1 (list :not-list-quote :b :c))
+   		(test-reduce-f-defun (list :defun :p1 (list :not-list-quote :b :c))
+   				     :one-param))
+  
+ )
 
 
 

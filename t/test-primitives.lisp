@@ -673,19 +673,36 @@
   (assert-equal (list :defun (list :p1 :a :b) :a1)
    		(test-reduce-f-defun (list :defun (list :p1 :a :b))
    				     :one-param))
-  (assert-equal (list :defun (list :a :p1 :b) :a1)
-   		(test-reduce-f-defun (list :defun (list :a :p1 :b))
-   				     :one-param))
-  (assert-equal (list :defun (list :not-list-quote :a :p1))
-   		(test-reduce-f-defun (list :defun (list :not-list-quote :a :p1))
-   				     :one-param))
-  (assert-equal (list :defun :not-list-quote :p1)			
+    (assert-equal (list :defun :not-list-quote :p1)			
    		(test-reduce-f-defun (list :defun (list :not-list-quote :a :b) :p1)
    				     :one-param))
   (assert-equal (list :defun :p1 (list :not-list-quote :b :c))
    		(test-reduce-f-defun (list :defun :p1 (list :not-list-quote :b :c))
    				     :one-param))
+
+
+  ;; :a1
+  (assert-equal :a1
+   		(test-reduce-f-defun (list :defun (list :a :p1 :b))
+   				     :one-param))
   
+  (assert-equal :a1
+   		(test-reduce-f-defun (list :defun (list :a :b :p1))
+   				     :one-param))
+
+
+  
+  (assert-equal (list :defun :a  (list :p1 :b :c))
+   		(test-reduce-f-defun (list :defun :a (list :p1 :b :c))
+   				     :one-param))
+  (assert-equal :a1
+   		(test-reduce-f-defun (list :defun (list :a :p1 :b))
+   				     :one-param))
+  
+  (assert-equal (list :defun :a (list :b :c :p1))
+   		(test-reduce-f-defun (list :defun :a (list :b :c :p1))
+   				     :one-param))
+
  )
 
 

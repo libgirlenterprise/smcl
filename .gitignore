@@ -8,3 +8,4 @@ unit-test.lisp
 *test-script.lisp*
 *script.lisp*
 t/smcl-test-config.lisp
+.tramp_history

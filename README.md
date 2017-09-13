@@ -1,4 +1,5 @@
 # Self-Modifying Common Lisp
+[Self-modifying Common Lisp - Dialect Design & Implementation](https://speakerdeck.com/austintinglibgirl/self-modifying-common-lisp)
 ## Usage
 1. Quickload it in the project file.
     ```
@@ -65,7 +66,7 @@
     ```
 5. Repeat 3. and 4. to check the value after self-modifying.
 ## Copyright
-Copyright (c) 2017 Libgirl CO,.LTD.
+Copyright (c) 2017 Libgirl Co,.Ltd.
 
 ## License
 Licensed under the LLGPL License.

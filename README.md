@@ -1,6 +1,11 @@
 # Self-Modifying Common Lisp
 ## Introduction
 [Self-modifying Common Lisp - Dialect Design & Implementation](https://speakerdeck.com/austintinglibgirl/self-modifying-common-lisp)
+## Installation
+Install [roswell](https://github.com/roswell/roswell) first. Then
+    ```
+    ros install libgirlenterprise/smcl
+    ```
 ## Usage
 1. Quickload it in the project file.
     ```
